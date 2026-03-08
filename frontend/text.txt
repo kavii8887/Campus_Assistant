@@ -1,0 +1,29 @@
+DROP POLICY IF EXISTS "admin full access" ON chat_sessions;
+
+CREATE POLICY "admin full access"
+ON chat_sessions
+FOR ALL
+USING (
+  user_id = 'c73f0cf3-4daa-4cf6-b94b-f98977f5d469'
+)
+WITH CHECK (
+  user_id = 'c73f0cf3-4daa-4cf6-b94b-f98977f5d469'
+);
+
+DROP POLICY IF EXISTS "admin manage messages" ON chat_messages;
+
+CREATE POLICY "admin manage messages"
+ON chat_messages
+FOR ALL
+USING (
+  session_id IN (
+    SELECT id FROM chat_sessions
+    WHERE user_id = 'c73f0cf3-4daa-4cf6-b94b-f98977f5d469'
+  )
+)
+WITH CHECK (
+  session_id IN (
+    SELECT id FROM chat_sessions
+    WHERE user_id = 'c73f0cf3-4daa-4cf6-b94b-f98977f5d469'
+  )
+);

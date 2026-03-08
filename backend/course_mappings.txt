@@ -1,0 +1,221 @@
+IP3151  → Induction Programme → 0
+HS3152  → Professional English – I → 3
+HS3252  → Professional English – II → 2
+MA3151  → Matrices and Calculus → 4
+MA3251  → Statistics and Numerical Methods → 4
+MA3354  → Discrete Mathematics → 4
+PH3151  → Engineering Physics → 3
+PH3256  → Physics for Information Science → 3
+CY3151  → Engineering Chemistry → 3
+GE3151  → Problem Solving and Python Programming → 3
+GE3171  → Problem Solving and Python Programming Laboratory → 2
+GE3152  → Heritage of Tamils → 1
+GE3252  → Tamils and Technology → 1
+GE3172  → English Laboratory → 1
+GE3272  → Communication Laboratory / Foreign Language → 2
+BS3171  → Physics and Chemistry Laboratory → 2
+BE3251  → Basic Electrical and Electronics Engineering → 3
+GE3251  → Engineering Graphics → 4
+CS3251  → Programming in C → 3
+CS3271  → Programming in C Laboratory → 2
+GE3271  → Engineering Practices Laboratory → 2
+CS3301  → Data Structures → 3
+CS3311  → Data Structures Laboratory → 1.5
+CS3351  → Digital Principles and Computer Organization → 4
+CS3352  → Foundations of Data Science → 3
+CS3361  → Data Science Laboratory → 2
+CS3381  → Object Oriented Programming Laboratory → 1.5
+CS3391  → Object Oriented Programming → 3
+GE3361  → Professional Development → 1
+CS3451  → Introduction to Operating Systems → 3
+CS3452  → Theory of Computation → 3
+CS3461  → Operating Systems Laboratory → 1.5
+CS3481  → Database Management Systems Laboratory → 1.5
+CS3491  → Artificial Intelligence and Machine Learning → 4
+CS3492  → Database Management Systems → 3
+CS3401  → Algorithms → 4
+GE3451  → Environmental Sciences and Sustainability → 2
+CS3501  → Compiler Design → 4
+CS3591  → Computer Networks → 4
+CB3491  → Cryptography and Cyber Security → 3
+CS3551  → Distributed Computing → 3
+CCS356  → Object Oriented Software Engineering → 4
+CS3691  → Embedded Systems and IoT → 4
+GE3791  → Human Values and Ethics → 2
+CS3711  → Summer Internship → 2
+CS3811  → Project Work / Internship → 10
+
+GE3751  → Principles of Management → 3
+GE3752  → Total Quality Management → 3
+GE3753  → Engineering Economics and Financial Accounting → 3
+GE3754  → Human Resource Management → 3
+GE3755  → Knowledge Management → 3
+GE3792  → Industrial Management → 3
+
+MX3081  → Introduction to Women and Gender Studies → 0
+MX3082  → Elements of Literature → 0
+MX3083  → Film Appreciation → 0
+MX3084  → Disaster Risk Reduction and Management → 0
+MX3085  → Well Being with Traditional Practices – Yoga, Ayurveda and Siddha → 0
+MX3086  → History of Science and Technology in India → 0
+MX3087  → Political and Economic Thought for a Humane Society → 0
+MX3088  → State, Nation Building and Politics in India → 0
+MX3089  → Industrial Safety → 0
+
+CCS346  → Exploratory Data Analysis → 3
+CCS360  → Recommender Systems → 3
+CCS355  → Neural Networks and Deep Learning → 3
+CCS369  → Text and Speech Analysis → 3
+CCW331  → Business Analytics → 3
+CCS349  → Image and Video Analytics → 3
+CCS338  → Computer Vision → 3
+CCS334  → Big Data Analytics → 3
+CCS375  → Web Technologies → 3
+CCS332  → App Development → 3
+CCS336  → Cloud Services Management → 3
+CCS370  → UI and UX Design → 3
+CCS366  → Software Testing and Automation → 3
+CCS374  → Web Application Security → 3
+CCS342  → DevOps → 3
+CCS358  → Principles of Programming Languages → 3
+CCS335  → Cloud Computing → 3
+CCS372  → Virtualization → 3
+CCS341  → Data Warehousing → 3
+CCS367  → Storage Technologies → 3
+CCS365  → Software Defined Networks → 3
+CCS368  → Stream Processing → 3
+CCS362  → Security and Privacy in Cloud → 3
+CCS344  → Ethical Hacking → 3
+CCS343  → Digital and Mobile Forensics → 3
+CCS363  → Social Network Security → 3
+CCS351  → Modern Cryptography → 3
+CB3591  → Engineering Secure Software Systems → 3
+CCS339  → Cryptocurrency and Blockchain Technologies → 3
+CCS354  → Network Security → 3
+CCS333  → Augmented Reality / Virtual Reality → 3
+CCS352  → Multimedia and Animation → 3
+CCS371  → Video Creation and Editing → 3
+CCW332  → Digital Marketing → 3
+CCS373  → Visual Effects → 3
+CCS347  → Game Development → 3
+CCS353  → Multimedia Data Compression and Storage → 3
+CCS361  → Robotic Process Automation → 3
+CCS340  → Cyber Security → 3
+CCS359  → Quantum Computing → 3
+CCS331  → 3D Printing and Design → 3
+CCS350  → Knowledge Engineering → 3
+CCS364  → Soft Computing → 3
+CCS357  → Optimization Techniques → 3
+CCS348  → Game Theory → 3
+CCS337  → Cognitive Science → 3
+CCS345  → Ethics and AI → 3
+
+OAS351  → Space Science → 3
+OIE351  → Introduction to Industrial Engineering → 3
+OBT351  → Food, Nutrition and Health → 3
+OCE351  → Environment and Social Impact Assessment → 3
+OEE351  → Renewable Energy System → 3
+OEI351  → Introduction to Industrial Instrumentation and Control → 3
+OMA351  → Graph Theory → 3
+OIE352  → Resource Management Techniques → 3
+OMG351  → Fintech Regulation → 3
+OFD351  → Holistic Nutrition → 3
+AI3021  → IT in Agricultural System → 3
+OEI352  → Introduction to Control Engineering → 3
+OPY351  → Pharmaceutical Nanotechnology → 3
+OAE351  → Aviation Management → 3
+OHS351  → English for Competitive Examinations → 3
+OMG352  → NGOs and Sustainable Development → 3
+OMG353  → Democracy and Good Governance → 3
+CME365  → Renewable Energy Technologies → 3
+OME354  → Applied Design Thinking → 3
+MF3003  → Reverse Engineering → 3
+OPR351  → Sustainable Manufacturing → 3
+AU3791  → Electric and Hybrid Vehicles → 3
+OAS352  → Space Engineering → 3
+OIM351  → Industrial Management → 3
+OIE354  → Quality Engineering → 3
+OSF351  → Fire Safety Engineering → 3
+OML351  → Introduction to Non-destructive Testing → 3
+OMR351  → Mechatronics → 3
+ORA351  → Foundation of Robotics → 3
+OAE352  → Fundamentals of Aeronautical Engineering → 3
+OGI351  → Remote Sensing Concepts → 3
+OAI351  → Urban Agriculture → 3
+OEN351  → Drinking Water Supply and Treatment → 3
+OEE352  → Electric Vehicle Technology → 3
+OEI353  → Introduction to PLC Programming → 3
+OCH351  → Nano Technology → 3
+OCH352  → Functional Materials → 3
+OFD352  → Traditional Indian Foods → 3
+OFD353  → Introduction to Food Processing → 3
+OPY352  → IPR for Pharma Industry → 3
+OTT351  → Basics of Textile Finishing → 3
+OTT352  → Industrial Engineering for Garment Industry → 3
+OTT353  → Basics of Textile Manufacture → 3
+OPE351  → Introduction to Petroleum Refining and Petrochemicals → 3
+CPE334  → Energy Conservation and Management → 3
+OPT351  → Basics of Plastics Processing → 3
+OEC351  → Signals and Systems → 3
+OEC352  → Fundamentals of Electronic Devices and Circuits → 3
+CBM348  → Foundation Skills in Integrated Product Development → 3
+CBM333  → Assistive Technology → 3
+OMA352  → Operations Research → 3
+OMA353  → Algebra and Number Theory → 3
+OMA354  → Linear Algebra → 3
+OCE353  → Lean Concepts, Tools and Practices → 3
+OBT352  → Basics of Microbial Technology → 3
+OBT353  → Basics of Biomolecules → 3
+OBT354  → Fundamentals of Cell and Molecular Biology → 3
+OHS352  → Project Report Writing → 3
+OMA355  → Advanced Numerical Methods → 3
+OMA356  → Random Processes → 3
+OMA357  → Queuing and Reliability Modelling → 3
+OMG354  → Production and Operations Management for Entrepreneurs → 3
+OMG355  → Multivariate Data Analysis → 3
+OME352  → Additive Manufacturing → 3
+CME343  → New Product Development → 3
+OME355  → Industrial Design & Rapid Prototyping Techniques → 3
+MF3010  → Micro and Precision Engineering → 3
+OMF354  → Cost Management of Engineering Projects → 3
+AU3002  → Batteries and Management System → 3
+AU3008  → Sensors and Actuators → 3
+OAS353  → Space Vehicles → 3
+OIM352  → Management Science → 3
+OIM353  → Production Planning and Control → 3
+OIE353  → Operations Management → 3
+OSF352  → Industrial Hygiene → 3
+OSF353  → Chemical Process Safety → 3
+OML352  → Electrical, Electronic and Magnetic Materials → 3
+OML353  → Nanomaterials and Applications → 3
+OMR352  → Hydraulics and Pneumatics → 3
+OMR353  → Sensors → 3
+ORA352  → Concepts in Mobile Robots → 3
+MV3501  → Marine Propulsion → 3
+OMV351  → Marine Merchant Vessels → 3
+OMV352  → Elements of Marine Engineering → 3
+CRA332  → Drone Technologies → 3
+OGI352  → Geographical Information System → 3
+OAI352  → Agriculture Entrepreneurship Development → 3
+OEN352  → Biodiversity Conservation → 3
+OEE353  → Introduction to Control Systems → 3
+OEI354  → Introduction to Industrial Automation Systems → 3
+OCH353  → Energy Technology → 3
+OCH354  → Surface Science → 3
+OFD354  → Fundamentals of Food Engineering → 3
+OFD355  → Food Safety and Quality Regulations → 3
+OPY353  → Nutraceuticals → 3
+OTT354  → Basics of Dyeing and Printing → 3
+FT3201  → Fibre Science → 3
+OTT355  → Garment Manufacturing Technology → 3
+OPE353  → Industrial Safety → 3
+OPE354  → Unit Operations in Petro Chemical Industries → 3
+OPT352  → Plastic Materials for Engineers → 3
+OPT353  → Properties and Testing of Plastics → 3
+OEC353  → VLSI Design → 3
+CBM370  → Wearable Devices → 3
+CBM356  → Medical Informatics → 3
+OCE354  → Basics of Integrated Water Resources Management → 3
+OBT355  → Biotechnology for Waste Management → 3
+OBT356  → Lifestyle Diseases → 3
+OBT357  → Biotechnology in Health Care → 3

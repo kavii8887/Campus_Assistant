@@ -1,0 +1,13 @@
+boto3==1.42.63
+fastapi==0.135.1
+numpy==1.26.0
+pandas==3.0.1
+Pillow==12.1.1
+protobuf==7.34.0
+pydantic==2.12.5
+python-dotenv==1.2.2
+qdrant_client==1.17.0
+Requests==2.32.5
+semantic_store==0.0.15
+python-multipart
+uvicorn
