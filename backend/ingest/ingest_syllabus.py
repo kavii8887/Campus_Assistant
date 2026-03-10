@@ -597,7 +597,7 @@ class IngestionPipeline:
         print(f"[3.5/6] Generating acronyms...")
         acronym_map = AcronymGenerator.generate_acronyms(parsed['courses'])
         
-        acronym_file = Path(f"{self.department}_acronyms.json")
+        acronym_file = Path(f"../data/{self.department}/{self.department}_acronyms.json")
         with open(acronym_file, 'w', encoding='utf-8') as f:
             json.dump(acronym_map, f, indent=2, ensure_ascii=False)
         
@@ -671,8 +671,8 @@ def main():
     parser = argparse.ArgumentParser(description='Ingest academic syllabus')
     parser.add_argument('markdown_file', type=str, help='Syllabus markdown file')
     parser.add_argument('--dept', type=str, required=True, help='Department code (CSE, ECE, etc.)')
-    parser.add_argument('--structured-path', type=str, default='./structured_store')
-    parser.add_argument('--mapping-file', type=str, default='course_mappings.txt')
+    parser.add_argument('--structured-path', type=str, default='../structured_store')
+    parser.add_argument('--mapping-file', type=str, default='../data/general/course_mappings.txt')
     
     args = parser.parse_args()
     

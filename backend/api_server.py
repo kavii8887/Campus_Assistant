@@ -26,7 +26,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,6 +66,15 @@ def normalize_department(dept: str | None) -> str | None:
 
     return mapping.get(d, d)
 
+import re
+
+def extract_department_from_message(msg: str) -> str | None:
+    msg = msg.upper().replace(".", "").replace(",", "")
+    depts = ["CSE", "ECE", "EEE", "MECH", "CIVIL", "IT", "AIDS", "AIML", "CSBS"]
+    for d in depts:
+        if re.search(r'\b' + d + r'\b', msg):
+            return normalize_department(d)
+    return None
 
 # =========================================================
 # REQUEST MODEL
@@ -103,29 +112,79 @@ def query(req: QueryRequest):
             )
             rag.session_manager.sessions[req.session_id] = new_session
 
-    # Set department if provided
-    normalized_dept = normalize_department(req.department)
-    if normalized_dept:
-        rag.set_department(normalized_dept, session_id=req.session_id)
+    try:
+        # Set department if provided
+        normalized_dept = normalize_department(req.department)
 
-    # Update session metadata
-    if rag.session_manager:
-        rag.session_manager.update_session(
-            req.session_id,
-            register_no=req.register_no,
-            student_year=req.year,
-            student_semester=req.semester,
-            student_department=normalized_dept,
+        if not normalized_dept and rag.session_manager:
+            sess = rag.session_manager.peek_session(req.session_id)
+            current_dept = sess.active_department if sess and hasattr(sess, 'active_department') else None
+
+            if not current_dept:
+                possible_dept = extract_department_from_message(req.message)
+                if possible_dept:
+                    normalized_dept = possible_dept
+                    rag.set_department(normalized_dept, session_id=req.session_id)
+                    rag.session_manager.update_session(req.session_id, student_department=normalized_dept)
+                    return {
+                        "query": req.message,
+                        "answer": f"I've set your active department to **{normalized_dept}**. How can I help you today?",
+                        "method": "system",
+                        "chunks_retrieved": 0,
+                        "chunks_used": 0,
+                        "llm_used": False,
+                        "processing_time": 0.0
+                    }
+
+        if normalized_dept:
+            rag.set_department(normalized_dept, session_id=req.session_id)
+
+        # Update session metadata
+        if rag.session_manager:
+            rag.session_manager.update_session(
+                req.session_id,
+                register_no=req.register_no,
+                student_year=req.year,
+                student_semester=req.semester,
+                student_department=normalized_dept,
+            )
+
+        # Execute query
+        result = rag.query(
+            req.message,
+            session_id=req.session_id,
+            verbose=False
         )
 
-    # Execute query
-    result = rag.query(
-        req.message,
-        session_id=req.session_id,
-        verbose=False
-    )
+        return result
 
-    return result
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        error_msg = str(e)
+        
+        # Check if error is related to Ollama connection
+        if "Connection" in error_msg or "Max retries exceeded" in error_msg or "11434" in error_msg or "refused" in error_msg:
+            return {
+                "query": req.message,
+                "answer": "⚠️ **System Offline:** The AI engine (Ollama) is not running locally. Please start the Ollama application on your machine to use the chat assistant.",
+                "method": "error",
+                "chunks_retrieved": 0,
+                "chunks_used": 0,
+                "llm_used": False,
+                "processing_time": 0.0
+            }
+
+        # Generic error handler
+        return {
+            "query": req.message,
+            "answer": f"⚠️ **An unexpected error occurred:**\n\n```text\n{error_msg}\n```",
+            "method": "error",
+            "chunks_retrieved": 0,
+            "chunks_used": 0,
+            "llm_used": False,
+            "processing_time": 0.0
+        }
 
 
 # =========================================================

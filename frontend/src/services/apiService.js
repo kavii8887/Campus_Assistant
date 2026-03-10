@@ -1,7 +1,7 @@
 import { supabase } from './supabaseClient';
 
 const ADMIN_USER_ID = 'c73f0cf3-4daa-4cf6-b94b-f98977f5d469';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export const apiService = {
 
@@ -164,6 +164,11 @@ export const apiService = {
     return data;
   },
 
+  deleteNews: async (id) => {
+    const { error } = await supabase.from('campus_news').delete().eq('id', id);
+    if (error) throw error;
+  },
+
   /* ---------------- ATTENDANCE UPLOAD ---------------- */
   async uploadAttendance({ file, department, year, semester, date }) {
     const formData = new FormData();
@@ -301,7 +306,7 @@ export const apiService = {
         session_id: sessionId,
         department: profile?.department ?? null,
         register_no: profile?.reg_no ?? null,
-        year: parseInt(profile.year_of_study) || null,
+        year: parseInt(profile?.year_of_study) || null,
         semester: profile?.semester ?? null
       })
     });

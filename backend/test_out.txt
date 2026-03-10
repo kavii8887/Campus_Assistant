@@ -1,0 +1,61 @@
+﻿Γ£ô Staff Pipeline: Loaded 30 records (6106 chars)
+
+--- Test 1 ---
+Q: give email id of archana mam
+  [StaffRAG] full_context: 30 records, 6615 chars ΓåÆ LLM
+A: LLM Fallback
+Method: llm_full_context
+
+--- Test 2 ---
+Q: give phone number of devi mam
+  [StaffRAG] full_context: 30 records, 6616 chars ΓåÆ LLM
+A: LLM Fallback
+Method: llm_full_context
+
+--- Test 3 ---
+Q: What is the email of Dr. A. M. Kalpana?
+  [StaffRAG] Direct Python answer (no LLM needed)
+A: The email of **Dr. A. M. Kalpana** is **kalpana.gce@gmail.com**
+Method: direct_python
+
+--- Test 4 ---
+Q: What is the phone number of Dr. C. Priya?
+  [StaffRAG] Direct Python answer (no LLM needed)
+A: The phone number of **Dr. C. Priya** is **9876543212**
+Method: direct_python
+
+--- Test 5 ---
+Q: Who is the HOD of CSE?
+  [StaffRAG] filtered: 12 records, 2680 chars ΓåÆ LLM
+A: LLM Fallback
+Method: llm_filtered
+
+--- Test 6 ---
+Q: List all staff in Civil Engineering
+  [StaffRAG] filtered: 13 records, 2802 chars ΓåÆ LLM
+A: LLM Fallback
+Method: llm_filtered
+
+--- Test 7 ---
+Q: Does anyone specialize in Machine Learning?
+  [StaffRAG] Direct Python answer (no LLM needed)
+A: Yes! **Dr. A. M. Kalpana** (CSE) ΓÇö Specialization: Data Mining, Machine Learning
+Method: direct_python
+
+--- Test 8 ---
+Q: What is the email of the principal?
+  [StaffRAG] filtered: 3 records, 1220 chars ΓåÆ LLM
+A: LLM Fallback
+Method: llm_filtered
+
+--- Test 9 ---
+Q: Who is the vice principal?
+  [StaffRAG] filtered: 2 records, 859 chars ΓåÆ LLM
+A: LLM Fallback
+Method: llm_filtered
+
+--- Test 10 ---
+Q: What is the email of Dr. Suresh Kumar?
+  [StaffRAG] Direct Python answer (no LLM needed)
+A: That information is not available in the staff directory for Dr. S. Senthil Kumar.
+Method: direct_python

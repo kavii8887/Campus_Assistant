@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Plus, User, Send, Menu, FileText, GraduationCap, 
-  Bell, LogOut, Sun, Moon, X, ChevronUp, MessageSquare, Paperclip, XCircle, Edit3, Pin, PinOff, Trash2, Copy, Check, Mic, MicOff, Volume2, VolumeX 
+import {
+  Plus, User, Send, Menu, FileText, GraduationCap,
+  Bell, LogOut, Sun, Moon, X, ChevronUp, MessageSquare, Paperclip, XCircle, Edit3, Pin, PinOff, Trash2, Copy, Check, Mic, MicOff, Volume2, VolumeX
 } from 'lucide-react';
 
 // Restored original imports for your project structure
@@ -75,11 +75,10 @@ const ViewProfileModal = ({ user, isOpen, onClose, onEdit, isDarkMode }) => {
         <div className="p-4 border-t border-gray-200/10 flex justify-end gap-3">
           <button
             onClick={onEdit}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              isDarkMode
-                ? 'bg-slate-800 hover:bg-slate-700 text-white'
-                : 'bg-slate-200 hover:bg-slate-300 text-slate-800'
-            }`}
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${isDarkMode
+              ? 'bg-slate-800 hover:bg-slate-700 text-white'
+              : 'bg-slate-200 hover:bg-slate-300 text-slate-800'
+              }`}
           >
             Edit
           </button>
@@ -99,11 +98,10 @@ const ViewProfileModal = ({ user, isOpen, onClose, onEdit, isDarkMode }) => {
 const ImageInstructionPanel = ({ isDarkMode }) => {
   return (
     <div
-      className={`mt-2 p-3 rounded-xl border text-sm leading-relaxed ${
-        isDarkMode
-          ? 'bg-slate-900/80 border-slate-700 text-slate-300'
-          : 'bg-indigo-50 border-indigo-200 text-indigo-700'
-      }`}
+      className={`mt-2 p-3 rounded-xl border text-sm leading-relaxed ${isDarkMode
+        ? 'bg-slate-900/80 border-slate-700 text-slate-300'
+        : 'bg-indigo-50 border-indigo-200 text-indigo-700'
+        }`}
     >
       <p className="font-semibold mb-1 flex items-center gap-1">
         💡 Instructions to Follow !!!
@@ -149,11 +147,11 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
     getWelcomeMessage(user)
   ]);
   const [historyItems, setHistoryItems] = useState([]);
-  const [activeTab, setActiveTab] = useState('chat'); 
+  const [activeTab, setActiveTab] = useState('chat');
   const [newsFeed, setNewsFeed] = useState([]);
   const [isViewProfileOpen, setIsViewProfileOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  
+
   const messagesEndRef = useRef(null);
   const profileMenuRef = useRef(null);
 
@@ -180,7 +178,41 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
   const recognitionRef = useRef(null);
 
   const [speakingId, setSpeakingId] = useState(null);
-  
+
+  const filteredNews = React.useMemo(() => {
+    return newsFeed.filter(item => {
+      if (!item.audience || item.audience.toLowerCase() === 'all') return true;
+      try {
+        const target = typeof item.audience === 'string' && item.audience.startsWith('{') ? JSON.parse(item.audience) : typeof item.audience === 'object' ? item.audience : null;
+        if (!target) return true;
+
+        if (!user?.isProfileComplete && (target.department !== 'ALL' || target.year !== 'ALL')) {
+          return false;
+        }
+
+        const safeDept = (user?.department || "").replace(/^BE /i, "").trim().toLowerCase();
+        const safeTargetDept = target.department === 'ALL' ? 'all' : target.department.toLowerCase();
+
+        // Custom match because 'Computer Science and Engineering' needs to match 'CSE' 
+        const isCSE = target.department === 'CSE' && (safeDept.includes('computer') || safeDept === 'cse');
+        const isECE = target.department === 'ECE' && (safeDept.includes('communication') || safeDept === 'ece');
+        const isEEE = target.department === 'EEE' && (safeDept.includes('electrical and electronics') || safeDept === 'eee');
+        const isMECH = target.department === 'MECH' && (safeDept.includes('mechanical') || safeDept === 'mech');
+        const isIT = target.department === 'IT' && (safeDept.includes('information') || safeDept === 'it');
+        const isCIVIL = target.department === 'CIVIL' && (safeDept.includes('civil') || safeDept === 'civil');
+
+        const deptMatch = target.department === 'ALL' || isCSE || isECE || isEEE || isMECH || isIT || isCIVIL || safeDept === safeTargetDept;
+
+        const safeYear = (user?.year_of_study || "").replace(/st|nd|rd|th/i, "").replace(/year/i, "").trim();
+        const yearMatch = target.year === 'ALL' || target.year === safeYear;
+
+        return deptMatch && yearMatch;
+      } catch (e) {
+        return true;
+      }
+    });
+  }, [newsFeed, user?.department, user?.year_of_study, user?.isProfileComplete]);
+
   useEffect(() => {
     const loadHistory = async () => {
       const data = await apiService.fetchHistory();
@@ -195,10 +227,10 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
     loadHistory();
     apiService.fetchNews().then(setNewsFeed);
   }, []);
-  
 
-  useEffect(() => { 
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); 
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isAiThinking]);
 
   useEffect(() => {
@@ -253,11 +285,11 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    
+
     // 1. Capture data immediately (Snapshot)
     const contentToSend = inputValue.trim();
     const imageToSend = selectedImage;
-    
+
     if (!contentToSend && !imageToSend) return;
 
     // 2. Immediate UI Feedback
@@ -278,7 +310,7 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
         if (!session?.id) throw new Error("Session creation failed");
 
         currentSessionId = session.id;
-        
+
         // Update global state and sidebar history
         setActiveSessionId(currentSessionId);
         setHistoryItems(prev => sortSessions([session, ...prev]));
@@ -306,11 +338,11 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
       if (imageToSend?.file) {
         // 📎 Handle Image (OCR)
         const result = await apiService.analyzeResultImage(imageToSend.file);
-        
+
         // Format the OCR result
         const gpaValue = result.gpa ?? result.cgpa ?? "N/A";
         aiResponse = ` **GPA:** ${gpaValue}\n\n **Percentage:** ${result.percentage || 'N/A'}`;
-      
+
       } else {
         // 💬 Handle Text Chat
         // We use 'contentToSend' here, NOT 'inputValue' (which is now empty)
@@ -393,10 +425,13 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
   }, [user?.name]);
 
   useEffect(() => {
-    if (!newsFeed.length) return;
+    if (!filteredNews.length) {
+      setHasUnreadNews(false);
+      return;
+    }
 
     // get latest news safely
-    const latestItem = [...newsFeed].sort((a, b) => {
+    const latestItem = [...filteredNews].sort((a, b) => {
       return new Date(
         b.created_at || b.timestamp
       ) - new Date(
@@ -413,7 +448,7 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
       : 0;
 
     setHasUnreadNews(latestTime > lastSeenTime);
-  }, [newsFeed, lastSeenNews]);
+  }, [filteredNews, lastSeenNews]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -454,7 +489,15 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
     // Stop any previous speech
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    // Sanitize text: remove emojis, specific punctuation (=, -, ,), markdown chars
+    const cleanText = text
+      .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '')
+      .replace(/[=,\-]/g, ' ')
+      .replace(/[*_#~`|]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
 
     utterance.lang = "en-US";
     utterance.rate = 1;     // Speed
@@ -480,27 +523,25 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
 
   return (
     <div className={`flex h-screen w-full transition-colors duration-300 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
-      
+
       {/* Floating Toggle for Mobile */}
       {!isSidebarOpen && (
-        <button 
-          onClick={() => setIsSidebarOpen(true)} 
-          className={`md:hidden fixed top-4 left-4 z-40 p-2.5 rounded-xl shadow-md border transition-all hover:scale-105 active:scale-95 ${
-            isDarkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
-          }`}
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className={`md:hidden fixed top-4 left-4 z-40 p-2.5 rounded-xl shadow-md border transition-all hover:scale-105 active:scale-95 ${isDarkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
+            }`}
         >
-          <Menu size={20}/>
+          <Menu size={20} />
         </button>
       )}
 
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 md:hidden animate-in fade-in duration-300" onClick={() => setIsSidebarOpen(false)} />}
-      
+
       {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-30 w-[280px] flex flex-col border-r transition-transform duration-300 ease-in-out ${
-        isDarkMode ? 'bg-slate-900 border-white/5' : 'bg-white border-slate-200'
-      } ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:hidden'}`}>
-        
+      <aside className={`fixed md:static inset-y-0 left-0 z-30 w-[280px] flex flex-col border-r transition-transform duration-300 ease-in-out ${isDarkMode ? 'bg-slate-900 border-white/5' : 'bg-white border-slate-200'
+        } ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:hidden'}`}>
+
         <div className="p-4 flex flex-col h-full overflow-hidden">
           {/* Brand Header */}
           <div className="flex items-center justify-between mb-8 px-2">
@@ -515,38 +556,37 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
               <span className="font-bold text-xl tracking-tight">Student Panel</span>
             </div>
             <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-2 opacity-50 hover:opacity-100 transition-opacity">
-              <X size={20}/>
+              <X size={20} />
             </button>
           </div>
-          
+
           {/* Main Navigation */}
           <div className="space-y-1.5 mb-6">
-             <button 
+            <button
               onClick={() => {
                 // 1. Reset UI to "New Chat" state immediately (No API call yet)
                 setActiveTab("chat");
-                setActiveSessionId(null); 
-                
+                setActiveSessionId(null);
+
                 // 2. Reset messages to just the welcome message
                 setMessages([getWelcomeMessage(user)]);
-                
+
                 // 3. Clear inputs
                 setInputValue("");
                 setSelectedImage(null);
-                
+
                 // Note: We do NOT add to historyItems here. 
                 // It will be added automatically when the first message is sent.
               }}
-              className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl font-semibold text-sm transition-all border ${
-                activeTab === 'chat' 
-                ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20' 
+              className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl font-semibold text-sm transition-all border ${activeTab === 'chat'
+                ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20'
                 : (isDarkMode ? 'bg-slate-800/50 border-slate-700 hover:bg-slate-800 text-slate-300' : 'bg-white border-slate-200 shadow-sm hover:bg-slate-50 text-slate-700')
-              }`}
+                }`}
             >
               <Plus size={18} /> New Chat
             </button>
 
-            <button 
+            <button
               onClick={() => {
                 setActiveTab('news');
 
@@ -563,12 +603,11 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
                   setHasUnreadNews(false);
                 }
               }}
-              className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl font-semibold text-sm transition-all border ${
-                activeTab === 'news' 
-                ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20' 
+              className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl font-semibold text-sm transition-all border ${activeTab === 'news'
+                ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20'
                 : (isDarkMode ? 'bg-slate-800/50 border-slate-700 hover:bg-slate-800 text-slate-300' : 'bg-white border-slate-200 shadow-sm hover:bg-slate-50 text-slate-700')
-              }`}
-            > 
+                }`}
+            >
               <Bell size={18} />
               <span className="flex items-center gap-2">
                 Campus News
@@ -578,7 +617,7 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
               </span>
             </button>
           </div>
-          
+
           {/* Chat History Section */}
           <div className="flex-1 overflow-y-auto scrollbar-hide px-1 space-y-0.5">
             <p className="px-3 mb-3 text-[10px] font-bold uppercase tracking-[0.15em] opacity-40">Recent History</p>
@@ -718,11 +757,11 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
                             setHistoryItems(prev => {
                               const updated = prev.map(h =>
                                 h.id === item.id
-                                  ? { 
-                                      ...h,
-                                      pinned: !h.pinned,
-                                      updated_at: new Date().toISOString() // 🔥 important
-                                    }
+                                  ? {
+                                    ...h,
+                                    pinned: !h.pinned,
+                                    updated_at: new Date().toISOString() // 🔥 important
+                                  }
                                   : h
                               );
 
@@ -774,23 +813,22 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
               );
             })}
           </div>
-          
+
           {/* Sidebar Bottom Profile Bar */}
           <div className="mt-4 pt-4 border-t border-gray-200/10 relative" ref={profileMenuRef}>
-            
+
             {/* Pop-up Profile Menu */}
             {isProfileMenuOpen && (
-              <div className={`absolute bottom-full left-0 right-0 mb-1 p-2 rounded-2xl shadow-md border animate-in slide-in-from-bottom-3 duration-200 origin-bottom ${
-                isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
-              }`}>
-                <button 
+              <div className={`absolute bottom-full left-0 right-0 mb-1 p-2 rounded-2xl shadow-md border animate-in slide-in-from-bottom-3 duration-200 origin-bottom ${isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
+                }`}>
+                <button
                   onClick={() => { setIsViewProfileOpen(true); setIsProfileMenuOpen(false); }}
                   className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl ${isDarkMode ? 'hover:bg-slate-800 dark:hover:bg-slate-800' : 'hover:bg-slate-100 dark:hover:bg-slate-800'} text-sm font-semibold transition-colors`}
                 >
                   <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-500"><User size={18} /></div>
                   My Profile
                 </button>
-                <button 
+                <button
                   onClick={() => { toggleTheme(); }}
                   className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl ${isDarkMode ? 'hover:bg-slate-800 dark:hover:bg-slate-800' : 'hover:bg-slate-100 dark:hover:bg-slate-800'} text-sm font-semibold transition-colors`}
                 >
@@ -800,7 +838,7 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
                   {isDarkMode ? 'Light Mode' : 'Dark Mode'}
                 </button>
 
-                <button 
+                <button
                   onClick={onLogout}
                   className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl ${isDarkMode ? 'hover:bg-red-500/10 text-red-500' : 'hover:bg-red-50 text-red-500'} text-sm font-semibold transition-colors`}
                 >
@@ -811,13 +849,12 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
             )}
 
             {/* Main Trigger Bar */}
-            <button 
+            <button
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-              className={`flex items-center gap-3 w-full p-2.5 rounded-2xl transition-all active:scale-95 ${
-                isProfileMenuOpen 
+              className={`flex items-center gap-3 w-full p-2.5 rounded-2xl transition-all active:scale-95 ${isProfileMenuOpen
                 ? (isDarkMode ? 'bg-slate-800 shadow-inner ring-1 ring-white/5' : 'bg-slate-100 shadow-inner ring-1 ring-black/5')
                 : (isDarkMode ? 'hover:bg-slate-800' : 'hover:bg-slate-50')
-              }`}
+                }`}
             >
               <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-white font-bold bg-indigo-600 shadow-md ring-2 ring-indigo-600/20">
                 {user?.name?.charAt(0)}
@@ -843,11 +880,10 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
                     <div className={`flex gap-5 max-w-[75%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                       <div
                         className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center 
-                        text-white shadow-md transform transition-transform hover:scale-110 ${
-                          msg.role === 'user'
+                        text-white shadow-md transform transition-transform hover:scale-110 ${msg.role === 'user'
                             ? 'bg-indigo-600 ring-4 ring-indigo-500/10'
                             : 'bg-indigo-600 ring-4 ring-indigo-500/10'
-                        }`}
+                          }`}
                       >
                         {msg.role === 'user' ? (
                           <span className="text-sm font-bold">
@@ -859,13 +895,12 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
                       </div>
                       <div className="relative group">
                         <div
-                          className={`p-4 rounded-2xl shadow-md backdrop-blur-sm break-normal ${
-                            msg.role === 'user'
-                              ? 'bg-indigo-600 text-white rounded-tr-none'
-                              : isDarkMode
-                                ? 'bg-slate-900 border border-slate-800 rounded-tl-none'
-                                : 'bg-white border border-slate-200 rounded-tl-none'
-                          }`}
+                          className={`p-4 rounded-2xl shadow-md backdrop-blur-sm break-normal ${msg.role === 'user'
+                            ? 'bg-indigo-600 text-white rounded-tr-none'
+                            : isDarkMode
+                              ? 'bg-slate-900 border border-slate-800 rounded-tl-none'
+                              : 'bg-white border border-slate-200 rounded-tl-none'
+                            }`}
                         >
                           {msg.image && (
                             <img
@@ -879,9 +914,8 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
 
                           {msg.timestamp && (
                             <div
-                              className={`text-[10px] mt-3 opacity-30 font-bold tracking-widest text-right ${
-                                msg.role === 'user' ? 'text-white' : ''
-                              }`}
+                              className={`text-[10px] mt-3 opacity-30 font-bold tracking-widest text-right ${msg.role === 'user' ? 'text-white' : ''
+                                }`}
                             >
                               {msg.timestamp}
                             </div>
@@ -890,13 +924,11 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
 
                         {/* Bottom Action Buttons */}
                         <div
-                          className={`absolute -bottom-6 ${
-                            msg.role === 'user' ? 'right-2' : 'left-2'
-                          } flex items-center gap-3 text-[11px] opacity-0 group-hover:opacity-100 transition-all ${
-                            isDarkMode
+                          className={`absolute -bottom-6 ${msg.role === 'user' ? 'right-2' : 'left-2'
+                            } flex items-center gap-3 text-[11px] opacity-0 group-hover:opacity-100 transition-all ${isDarkMode
                               ? 'text-slate-400 hover:text-slate-200'
                               : 'text-slate-500 hover:text-slate-700'
-                          }`}
+                            }`}
                         >
 
                           {/* 📋 Copy */}
@@ -941,11 +973,11 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
                     </div>
                   </div>
                 ))}
-                
+
                 {isAiThinking && (
                   <div className="flex gap-5 animate-pulse">
                     <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white ring-4 ring-indigo-500/10">
-                      <GraduationCap size={18}/>
+                      <GraduationCap size={18} />
                     </div>
                     <div className={`px-6 py-5 rounded-3xl rounded-tl-none ${isDarkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-200'}`}>
                       <div className="flex gap-1.5">
@@ -964,7 +996,7 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
                   <h1 className="text-4xl font-black tracking-tight mb-3">Campus Updates</h1>
                   <p className="text-lg opacity-50 font-medium">Stay synced with the latest events and academic notices.</p>
                 </div>
-                <NewsFeed news={newsFeed} isDarkMode={isDarkMode} variant="student" />
+                <NewsFeed news={filteredNews} isDarkMode={isDarkMode} variant="student" />
               </div>
             )}
           </div>
@@ -995,13 +1027,12 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
                   <ImageInstructionPanel isDarkMode={isDarkMode} />
                 </div>
               )}
-              <form 
-                onSubmit={handleSendMessage} 
-                className={`group relative flex items-end gap-1.5 p-2 rounded-[2.5rem] border backdrop-blur-xl transition-all duration-300 ${
-                  isDarkMode 
-                    ? 'bg-slate-950/80 border-slate-800 focus-within:border-indigo-500/50' 
-                    : 'bg-white/80 border-slate-200 focus-within:border-indigo-500/50'
-                }`}
+              <form
+                onSubmit={handleSendMessage}
+                className={`group relative flex items-end gap-1.5 p-2 rounded-[2.5rem] border backdrop-blur-xl transition-all duration-300 ${isDarkMode
+                  ? 'bg-slate-950/80 border-slate-800 focus-within:border-indigo-500/50'
+                  : 'bg-white/80 border-slate-200 focus-within:border-indigo-500/50'
+                  }`}
               >
                 <input
                   ref={fileInputRef}
@@ -1014,11 +1045,10 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
                 <button
                   type="button"
                   onClick={() => fileInputRef.current.click()}
-                  className={`p-2.5 rounded-3xl transition-all ${
-                    isDarkMode
-                      ? 'hover:bg-slate-800 text-slate-300'
-                      : 'hover:bg-slate-100 text-slate-600'
-                  }`}
+                  className={`p-2.5 rounded-3xl transition-all ${isDarkMode
+                    ? 'hover:bg-slate-800 text-slate-300'
+                    : 'hover:bg-slate-100 text-slate-600'
+                    }`}
                 >
                   <Paperclip size={18} />
                 </button>
@@ -1035,32 +1065,29 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
                   rows={1}
                   className={`flex-1 bg-transparent border-none outline-none 
                   h-[40px] px-3 py-2 text-[15px] leading-[24px]
-                  font-medium resize-none scrollbar-hide ${
-                    isDarkMode ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
-                  }`}
+                  font-medium resize-none scrollbar-hide ${isDarkMode ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
+                    }`}
                 />
                 {/* 🎤 Mic Button */}
                 <button
                   type="button"
                   onClick={handleMicClick}
-                  className={`p-2.5 rounded-3xl transition-all ${
-                    isListening
-                      ? 'bg-red-500 text-white animate-pulse'
-                      : isDarkMode
-                        ? 'hover:bg-slate-800 text-slate-300'
-                        : 'hover:bg-slate-100 text-slate-600'
-                  }`}
+                  className={`p-2.5 rounded-3xl transition-all ${isListening
+                    ? 'bg-red-500 text-white animate-pulse'
+                    : isDarkMode
+                      ? 'hover:bg-slate-800 text-slate-300'
+                      : 'hover:bg-slate-100 text-slate-600'
+                    }`}
                 >
                   {isListening ? <MicOff size={18} /> : <Mic size={18} />}
                 </button>
                 <button
                   type="submit"
                   disabled={!canSend}
-                  className={`p-2.5 rounded-3xl transition-all duration-300 flex-shrink-0 ${
-                    canSend
-                      ? 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-sm'
-                      : 'bg-slate-100 text-slate-400 dark:bg-slate-800 opacity-40 cursor-not-allowed'
-                  }`}
+                  className={`p-2.5 rounded-3xl transition-all duration-300 flex-shrink-0 ${canSend
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-sm'
+                    : 'bg-slate-100 text-slate-400 dark:bg-slate-800 opacity-40 cursor-not-allowed'
+                    }`}
                 >
                   <Send size={18} />
                 </button>
@@ -1071,15 +1098,15 @@ const ChatInterface = ({ user, onLogout, isDarkMode, toggleTheme, onProfileUpdat
             </div>
           </div>
         )}
-        <ViewProfileModal 
-          user={user} 
-          isOpen={isViewProfileOpen} 
-          onClose={() => setIsViewProfileOpen(false)} 
+        <ViewProfileModal
+          user={user}
+          isOpen={isViewProfileOpen}
+          onClose={() => setIsViewProfileOpen(false)}
           onEdit={() => {
             setIsViewProfileOpen(false);
             setIsEditProfileOpen(true);
           }}
-          isDarkMode={isDarkMode} 
+          isDarkMode={isDarkMode}
         />
         <UpdateProfileModal
           user={user}

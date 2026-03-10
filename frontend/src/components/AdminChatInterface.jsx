@@ -30,7 +30,8 @@ const MarkdownRenderer = ({ content, isDarkMode }) => {
 const BroadcastModal = ({ isOpen, onClose, isDarkMode, onSend }) => {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
-  const [audience, setAudience] = useState('all');
+  const [audienceDept, setAudienceDept] = useState('ALL');
+  const [audienceYear, setAudienceYear] = useState('ALL');
   const [file, setFile] = useState(null);
   const fileInputRef = useRef(null);
   if (!isOpen) return null;
@@ -40,13 +41,15 @@ const BroadcastModal = ({ isOpen, onClose, isDarkMode, onSend }) => {
     await onSend({
       title,
       message,
-      audience,
+      audience: JSON.stringify({ department: audienceDept, year: audienceYear }),
       file
     });
 
     onClose();
     setTitle('');
     setMessage('');
+    setAudienceDept('ALL');
+    setAudienceYear('ALL');
     setFile(null);
   };
   const handleFileSelect = (e) => {
@@ -64,54 +67,70 @@ const BroadcastModal = ({ isOpen, onClose, isDarkMode, onSend }) => {
         <form onSubmit={handleSend} className="p-6 space-y-4">
           <input required value={title} onChange={e => setTitle(e.target.value)} className={`w-full p-3 rounded-xl border outline-none bg-transparent ${isDarkMode ? 'border-slate-700' : 'border-gray-200'}`} placeholder="Announcement Title" />
           <textarea required rows={4} value={message} onChange={e => setMessage(e.target.value)} className={`w-full p-3 rounded-xl border outline-none resize-none bg-transparent ${isDarkMode ? 'border-slate-700' : 'border-gray-200'}`} placeholder="Type your broadcast message..." />
-            {/* File Upload */}
-            <div className="space-y-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                hidden
-                onChange={handleFileSelect}
-              />
+          <div className="grid grid-cols-2 gap-3">
+            <select value={audienceDept} onChange={e => setAudienceDept(e.target.value)} className={`w-full p-3 rounded-xl border bg-transparent text-sm outline-none ${isDarkMode ? 'border-slate-700 [&>option]:bg-slate-900' : 'border-gray-200 [&>option]:bg-white'}`}>
+              <option value="ALL">All Departments</option>
+              <option value="CSE">CSE</option>
+              <option value="ECE">ECE</option>
+              <option value="EEE">EEE</option>
+              <option value="IT">IT</option>
+              <option value="MECH">MECH</option>
+              <option value="CIVIL">CIVIL</option>
+            </select>
+            <select value={audienceYear} onChange={e => setAudienceYear(e.target.value)} className={`w-full p-3 rounded-xl border bg-transparent text-sm outline-none ${isDarkMode ? 'border-slate-700 [&>option]:bg-slate-900' : 'border-gray-200 [&>option]:bg-white'}`}>
+              <option value="ALL">All Years</option>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+            </select>
+          </div>
+          {/* File Upload */}
+          <div className="space-y-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              hidden
+              onChange={handleFileSelect}
+            />
 
-              <button
-                type="button"
-                onClick={() => fileInputRef.current.click()}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition ${
-                  isDarkMode
-                    ? 'border-slate-700 hover:bg-slate-800'
-                    : 'border-gray-200 hover:bg-gray-50'
+            <button
+              type="button"
+              onClick={() => fileInputRef.current.click()}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition ${isDarkMode
+                  ? 'border-slate-700 hover:bg-slate-800'
+                  : 'border-gray-200 hover:bg-gray-50'
                 }`}
-              >
-                <Paperclip size={16} />
-                Attach File
-              </button>
+            >
+              <Paperclip size={16} />
+              Attach File
+            </button>
 
-              {/* File Preview */}
-              {file && (
-                <div
-                  className={`flex items-center justify-between gap-3 p-3 rounded-xl border text-sm ${
-                    isDarkMode
-                      ? 'border-slate-700 bg-slate-800/50'
-                      : 'border-gray-200 bg-gray-50'
+            {/* File Preview */}
+            {file && (
+              <div
+                className={`flex items-center justify-between gap-3 p-3 rounded-xl border text-sm ${isDarkMode
+                    ? 'border-slate-700 bg-slate-800/50'
+                    : 'border-gray-200 bg-gray-50'
                   }`}
-                >
-                  <div className="truncate">
-                    <p className="font-semibold truncate">{file.name}</p>
-                    <p className="text-xs opacity-60">
-                      {(file.size / 1024).toFixed(1)} KB
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setFile(null)}
-                    className="text-red-500 hover:text-red-600"
-                  >
-                    <XCircle size={18} />
-                  </button>
+              >
+                <div className="truncate">
+                  <p className="font-semibold truncate">{file.name}</p>
+                  <p className="text-xs opacity-60">
+                    {(file.size / 1024).toFixed(1)} KB
+                  </p>
                 </div>
-              )}
-            </div>
+
+                <button
+                  type="button"
+                  onClick={() => setFile(null)}
+                  className="text-red-500 hover:text-red-600"
+                >
+                  <XCircle size={18} />
+                </button>
+              </div>
+            )}
+          </div>
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium opacity-60">Cancel</button>
             <button type="submit" className="px-6 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Broadcast</button>
@@ -125,11 +144,10 @@ const BroadcastModal = ({ isOpen, onClose, isDarkMode, onSend }) => {
 const ImageInstructionPanel = ({ isDarkMode }) => {
   return (
     <div
-      className={`mt-2 p-3 rounded-xl border text-sm leading-relaxed ${
-        isDarkMode
+      className={`mt-2 p-3 rounded-xl border text-sm leading-relaxed ${isDarkMode
           ? 'bg-slate-900/80 border-slate-700 text-slate-300'
           : 'bg-indigo-50 border-indigo-200 text-emerald-700'
-      }`}
+        }`}
     >
       <p className="font-semibold mb-1 flex items-center gap-1">
         💡 Instructions to Follow !!!
@@ -195,17 +213,16 @@ const UploadAttendanceModal = ({ isOpen, onClose, onSend, isDarkMode }) => {
             </select>
             <select value={semester} onChange={e => setSemester(e.target.value)} className={`p-2 rounded-lg border bg-transparent text-sm outline-none ${isDarkMode ? 'border-slate-700' : 'border-gray-200'}`}>
               <option value="">Semester</option>
-              {['S1','S2','S3','S4','S5','S6','S7','S8'].map(s => <option key={s} value={s}>{s}</option>)}
+              {['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'].map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} className={`p-2 rounded-lg border bg-transparent text-sm outline-none ${isDarkMode ? 'border-slate-700' : 'border-gray-200'}`} />
           </div>
 
           <input ref={fileInputRef} type="file" accept=".xlsx, .xls, .csv" hidden onChange={handleFileSelect} />
-          <div 
-            onClick={() => fileInputRef.current.click()} 
-            className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all ${
-              isDarkMode ? 'border-slate-700 hover:border-emerald-500/50 hover:bg-slate-800/50' : 'border-slate-200 hover:border-emerald-500/50 hover:bg-emerald-50/50'
-            }`}
+          <div
+            onClick={() => fileInputRef.current.click()}
+            className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all ${isDarkMode ? 'border-slate-700 hover:border-emerald-500/50 hover:bg-slate-800/50' : 'border-slate-200 hover:border-emerald-500/50 hover:bg-emerald-50/50'
+              }`}
           >
             <UploadCloud size={40} className="mb-2 opacity-40 text-emerald-500" />
             <span className="text-sm font-medium">{file ? file.name : 'Click to upload Excel'}</span>
@@ -214,12 +231,11 @@ const UploadAttendanceModal = ({ isOpen, onClose, onSend, isDarkMode }) => {
         </div>
         <div className="p-5 flex justify-end gap-3 border-t border-gray-200/10">
           <button onClick={onClose} className="px-4 py-2 text-sm font-medium opacity-60">Cancel</button>
-          <button 
-            disabled={!file || !department || !year} 
-            onClick={handleSubmit} 
-            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-              file ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+          <button
+            disabled={!file || !department || !year}
+            onClick={handleSubmit}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${file ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
           >
             Sync Records
           </button>
@@ -262,15 +278,15 @@ const AdminChatInterface = ({ user, onLogout, isDarkMode, toggleTheme }) => {
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isAiThinking]);
 
   useEffect(() => {
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
-  if (!SpeechRecognition) {
-    console.warn("Speech Recognition not supported in this browser.");
-    return;
-  }
+    if (!SpeechRecognition) {
+      console.warn("Speech Recognition not supported in this browser.");
+      return;
+    }
 
-  const recognition = new SpeechRecognition();
+    const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = "en-US";
@@ -314,7 +330,15 @@ const AdminChatInterface = ({ user, onLogout, isDarkMode, toggleTheme }) => {
     // Stop any previous speech
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    // Sanitize text: remove emojis, specific punctuation (=, -, ,), markdown chars
+    const cleanText = text
+      .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '')
+      .replace(/[=,\-]/g, ' ')
+      .replace(/[*_#~`|]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
 
     utterance.lang = "en-US";
     utterance.rate = 1;     // Speed
@@ -412,14 +436,17 @@ const AdminChatInterface = ({ user, onLogout, isDarkMode, toggleTheme }) => {
       setSelectedImage(null);
       setIsAiThinking(true);
 
-      setTimeout(async () => {
-        const adminResponse = 'Admin command processed.';
+      try {
+        const aiResponse = await apiService.sendMessage(currentInput, {}, sessionId);
+        const adminResponse = aiResponse.response;
+
         await apiService.saveAdminMessage({
           session_id: sessionId,
           role: 'assistant',
           content: adminResponse
         });
         await apiService.touchSession(sessionId);
+
         setMessages(prev => [
           ...prev,
           {
@@ -432,8 +459,20 @@ const AdminChatInterface = ({ user, onLogout, isDarkMode, toggleTheme }) => {
             })
           }
         ]);
+      } catch (err) {
+        console.error('AI error:', err);
+        setMessages(prev => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            role: 'assistant',
+            content: "Sorry, I encountered an error processing your request.",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        ]);
+      } finally {
         setIsAiThinking(false);
-      }, 1000);
+      }
     } catch (err) {
       console.error('Admin message failed:', err);
       setIsAiThinking(false);
@@ -588,6 +627,16 @@ const AdminChatInterface = ({ user, onLogout, isDarkMode, toggleTheme }) => {
     }
   };
 
+  const handleDeleteNews = async (id) => {
+    if (!confirm('Are you sure you want to delete this broadcast?')) return;
+    try {
+      await apiService.deleteNews(id);
+      setNewsFeed(prev => prev.filter(n => n.id !== id));
+    } catch (err) {
+      alert('Failed to delete news: ' + err.message);
+    }
+  };
+
   const handleMicClick = () => {
     if (!recognitionRef.current) return;
 
@@ -610,9 +659,9 @@ const AdminChatInterface = ({ user, onLogout, isDarkMode, toggleTheme }) => {
             <span className="font-bold text-lg">Admin Panel</span>
           </div>
           <button onClick={() => setIsBroadcastOpen(true)} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl font-medium text-sm bg-emerald-600 text-white shadow-lg mb-4"><Radio size={18} /> Broadcast News</button>
-          
+
           <button onClick={() => setIsAttendanceOpen(true)} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl font-medium text-sm border-2 border-emerald-600/20 text-emerald-600 hover:bg-emerald-500/5 transition-all mb-4">
-              <Table size={18} /> Upload Attendance
+            <Table size={18} /> Upload Attendance
           </button>
 
           <button onClick={startNewAdminChat} className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl font-medium text-sm ${activeTab === 'chat' ? isDarkMode ? 'bg-slate-600 dark:bg-slate-800' : 'bg-slate-200' : isDarkMode ? 'bg-slate-800' : 'bg-slate-50'}`}><Plus size={18} /> New Chat</button>
@@ -709,13 +758,11 @@ const AdminChatInterface = ({ user, onLogout, isDarkMode, toggleTheme }) => {
                         </div>
                         {/* Bottom Action Buttons */}
                         <div
-                          className={`absolute -bottom-6 ${
-                            msg.role === 'user' ? 'right-2' : 'left-2'
-                          } flex items-center gap-3 text-[11px] opacity-0 group-hover:opacity-100 transition-all ${
-                            isDarkMode
+                          className={`absolute -bottom-6 ${msg.role === 'user' ? 'right-2' : 'left-2'
+                            } flex items-center gap-3 text-[11px] opacity-0 group-hover:opacity-100 transition-all ${isDarkMode
                               ? 'text-slate-400 hover:text-slate-200'
                               : 'text-slate-500 hover:text-slate-700'
-                          }`}
+                            }`}
                         >
                           {/* 🔊 Speak (Only Assistant) */}
                           {msg.role === 'assistant' && (
@@ -762,7 +809,7 @@ const AdminChatInterface = ({ user, onLogout, isDarkMode, toggleTheme }) => {
                 {isAiThinking && <div className="text-xs opacity-50 animate-pulse">Thinking...</div>}
                 <div ref={messagesEndRef} />
               </div>
-            ) : <NewsFeed news={newsFeed} isDarkMode={isDarkMode} variant="admin" />}
+            ) : <NewsFeed news={newsFeed} isDarkMode={isDarkMode} variant="admin" onDeleteNews={handleDeleteNews} />}
           </div>
         </div>
         {activeTab === 'chat' && (
@@ -785,13 +832,12 @@ const AdminChatInterface = ({ user, onLogout, isDarkMode, toggleTheme }) => {
                 <button
                   type="button"
                   onClick={handleMicClick}
-                  className={`p-2.5 rounded-3xl transition-all ${
-                    isListening
+                  className={`p-2.5 rounded-3xl transition-all ${isListening
                       ? 'bg-red-500 text-white animate-pulse'
                       : isDarkMode
                         ? 'hover:bg-slate-800 text-slate-300'
                         : 'hover:bg-slate-100 text-slate-600'
-                  }`}
+                    }`}
                 >
                   {isListening ? <MicOff size={18} /> : <Mic size={18} />}
                 </button>

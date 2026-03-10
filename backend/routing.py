@@ -106,22 +106,101 @@ def _get_intent_map():
     return _INTENT_TO_QT
 
 
+# ── Staff name cache for routing ─────────────────────────────────────────────
+_staff_name_cache = None
+
+def _is_staff_name_in_query(q_lo: str) -> bool:
+    """Check if any known staff/admin name appears in the query."""
+    global _staff_name_cache
+    if _staff_name_cache is None:
+        _staff_name_cache = set()
+        try:
+            import json
+            from pathlib import Path
+            p = Path("data/staffs.json")
+            if p.exists():
+                data = json.loads(p.read_text(encoding="utf-8"))
+                # Admin names
+                principal = data.get("administration", {}).get("principal", {})
+                if principal.get("name"):
+                    _add_name_parts(_staff_name_cache, principal["name"])
+                for person in data.get("administration", {}).get("administrative_hierarchy", []):
+                    if person.get("name"):
+                        _add_name_parts(_staff_name_cache, person["name"])
+                # Department staff names
+                for dept in data.get("departments", []):
+                    for s in dept.get("staff", []):
+                        if s.get("name"):
+                            _add_name_parts(_staff_name_cache, s["name"])
+        except Exception:
+            pass
+
+    # Check if any cached name part appears in the query
+    for name_part in _staff_name_cache:
+        if name_part in q_lo:
+            return True
+    return False
+
+
+def _add_name_parts(cache: set, full_name: str):
+    """Add meaningful name parts (length > 2) to the cache."""
+    clean = re.sub(r'[^a-z\s]', '', full_name.lower()).strip()
+    for part in clean.split():
+        if len(part) > 2:  # Skip initials like "a", "m", "s"
+            cache.add(part)
+
+
 # ── Public API ────────────────────────────────────────────────────────────────
 
 def classify(query: str, session_course: Optional[str] = None) -> Tuple[bool, Optional[str]]:
     """
     Classify a query into (is_structured, query_type).
 
-    Tries IntentParser first (richer detection), falls back to the
-    legacy pattern set that was in rag_runtime._is_structured_query().
+    Checks deterministic triggers (staff/attendance) first.
+    Then tries IntentParser (richer detection for syllabus), falls back to the
+    legacy pattern set.
 
     Returns:
         (True, "QUERY_TYPE") for structured queries
         (False, None)        for semantic queries
     """
+    q_lo = query.lower()
+    
+    # ── 0. High priority interceptors (Staff / Attendance) ───────────────────
+    # Staff info — keyword triggers
+    staff_regex = r'\b(who\s+teaches|who\s+is\s+teaching|instructor|professor[s]?|facult(?:y|ies)|staff[s]?|hod|head\s+of\s+department|email|contact\s+(?:number|details|info|no)|phone\s+(?:number|no)|principal|vice\s+principal|bursar|superintendent|administration|institution|specializ\w*|qualification|area\s+of|designation|experience\s+year|teaches?\s+what|department\s+head)\b'
+    if re.search(staff_regex, q_lo):
+        return True, "STAFF_INFO"
+
+    # Staff info — known name detection (catches "Dr. Kalpana's ..." queries)
+    if _is_staff_name_in_query(q_lo):
+        return True, "STAFF_INFO"
+
+    # Attendance percentage
+    if any(t in q_lo for t in [
+        'attendance percentage', 'my attendance', 'attendance percent',
+        'what is my attendance', "what's my attendance",
+    ]):
+        return True, "ATTENDANCE_PERCENTAGE"
+    
+    # Attendance status
+    if any(t in q_lo for t in [
+        'eligible for exam', 'eligibility', 'attendance status',
+        'can i write exam', 'exam eligibility', 'am i eligible',
+    ]) and 'attendance' in q_lo:
+        return True, "ATTENDANCE_STATUS"
+        
+    # Class count
+    if any(t in q_lo for t in [
+        'how many classes', 'classes attended', 'classes did i attend',
+        'number of classes', 'class count',
+    ]):
+        return True, "ATTENDANCE_COUNT"
+
+
     # ── 1. IntentParser path ─────────────────────────────────────────────────
     if _INTENT_PARSER_AVAILABLE and _intent_parser is not None:
-        parsed: ParsedQuery = _intent_parser.parse(query, session_course)
+        parsed = _intent_parser.parse(query, session_course)
         intent_map = _get_intent_map()
 
         if parsed.intents:
@@ -175,12 +254,8 @@ def _legacy_classify(query: str) -> Tuple[bool, Optional[str]]:
         return True, QT_ATTENDANCE_COUNT
     
     # Staff info
-    if any(t in q for t in [
-        'who teaches', 'who is teaching', 'instructor for', 'professor for',
-        'faculty for', 'staff for', 'list faculty', 'list staff',
-        'faculty in', 'staff in', 'professors in', 'who is the professor',
-        'who is the instructor', 'who is the faculty',
-    ]):
+    staff_regex = r'\b(who\s+teaches|who\s+is\s+teaching|instructor|professor[s]?|facult(?:y|ies)|staff[s]?|hod|head\s+of\s+department|email|contact\s+(?:number|details|info|no)|phone\s+(?:number|no)|principal|vice\s+principal|bursar|superintendent|administration|institution)\b'
+    if re.search(staff_regex, q):
         return True, "STAFF_INFO"
 
     # ── UNIT_CONTENT ─────────────────────────────────────────────────────────
@@ -244,11 +319,14 @@ def _legacy_classify(query: str) -> Tuple[bool, Optional[str]]:
     ]):
         return True, QT_UNIT_LIST
 
-    # ── CREDITS_COMPARE ──────────────────────────────────────────────────────
-    has_credit = 'credit' in q
+    # ── CREDITS_COMPARE (Includes Semester Aggregates) ───────────────────────
+    has_credit = any(t in q for t in ['credit', 'cerdit', 'creadit'])
     has_sep = _has_separator(q)
     has_compare = any(t in q for t in ['compare', 'comparison'])
-    if has_credit and (has_compare or has_sep):
+    sem = [r'\bsem(?:e)?ster\s+[1-8ivx]+\b', r'\bsem\s+[1-8ivx]+\b', r'\b[1-8ivx]+(?:st|nd|rd|th)?\s+sem(?:e)?ster\b']
+    has_semester = any(re.search(p, q) for p in sem)
+    
+    if has_credit and (has_compare or has_sep or has_semester):
         return True, QT_CREDITS_COMPARE
 
     # ── COURSE_CODE ──────────────────────────────────────────────────────────
@@ -271,10 +349,7 @@ def _legacy_classify(query: str) -> Tuple[bool, Optional[str]]:
         return True, QT_COURSE_NAME
 
     # ── CREDITS (single) ─────────────────────────────────────────────────────
-    if any(t in q for t in [
-        'how many credits', 'credits for', 'credits of',
-        'credit hours for', 'credit hours of',
-    ]):
+    if has_credit:
         return True, QT_CREDITS
 
     # ── FULL_SYLLABUS ────────────────────────────────────────────────────────

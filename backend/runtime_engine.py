@@ -105,7 +105,6 @@ class AcademicRAGSystem:
             max_context_chars=max_context_chars,
         )
 
-        self.staff_data = self._load_staff_data(staff_json_path)
 
         print("=" * 70)
         print("ACADEMIC SYLLABUS RAG SYSTEM (v5.7 - ALL BUGS FIXED)")
@@ -119,23 +118,9 @@ class AcademicRAGSystem:
         if department:
             self._dept_router.init_department_resources(department)
 
-    def _load_staff_data(self, json_path: Optional[str]) -> Optional[Dict]:
-        if not json_path:
-            json_path = "./staff_data.json"
-        
-        path = Path(json_path)
-        if not path.exists():
-            print(f"⚠ Staff data not found at {json_path}")
-            return None
-        
-        try:
-            with open(path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            print(f"✓ Loaded staff data: {len(data.get('staff', []))} records")
-            return data
-        except Exception as e:
-            print(f"⚠ Failed to load staff data: {e}")
-            return None
+        from staff_pipeline import StaffPipeline
+        self.staff_pipeline = StaffPipeline(self.ollama, staff_json_path if staff_json_path else "data/staffs.json")
+
 
     @property
     def department(self) -> Optional[str]:
@@ -213,13 +198,14 @@ class AcademicRAGSystem:
                 print(f"\n✓ Selected: {name} ({code})\n")
             return self.query(f"syllabus for {code}", verbose=verbose, session_id=session_id)
 
-        # ── Semester block ────────────────────────────────────────────────────
-        if self._is_semester_query(query_text):
-            return self._blocked("Semester-level aggregate data is not available. Please ask about specific courses.")
-
         # ── DB status check ───────────────────────────────────────────────────
         session_course = self._get_session_course(session_id)
         is_structured, query_type = classify(query_text, session_course)
+
+        # ── Semester block ────────────────────────────────────────────────────
+        if self._is_semester_query(query_text):
+            if query_type != QT_CREDITS_COMPARE:
+                return self._blocked("Semester-level aggregate data is not available. Please ask about specific courses.")
 
         if verbose:
             print(f"[CLASSIFICATION] is_structured={is_structured}, query_type={query_type or 'None'}")
@@ -240,8 +226,8 @@ class AcademicRAGSystem:
         active_dept = self._dept_router.ensure_dept_resources(session_id, self.session_manager)
         if not active_dept:
             return self._blocked(
-                "No department selected for this session. "
-                "Please select a department first (e.g., call set_department('CSE'))."
+                "Select your department "
+                
             )
 
         is_lab_query = self._is_lab_query(query_text)
@@ -438,21 +424,31 @@ class AcademicRAGSystem:
 
         if query_type == "STAFF_INFO":
             if verbose:
-                print(f"  → Staff info handler (deterministic)\n")
+                print(f"  → Staff info handler (in-memory pipeline)\n")
             
-            session_course = None
-            if session_id and self.session_manager:
-                session_course = self.session_manager.get_active_course(session_id)
-            elif self.last_course_code:
-                session_course = self.last_course_code
+            # Determine target department from query
+            q_upper = query.upper().replace(".", "").replace(",", "")
+            depts = ["CSE", "ECE", "EEE", "MECH", "CIVIL", "IT", "AIDS", "AIML", "CSBS"]
+            mapping = {
+                "BE COMPUTER SCIENCE AND ENGINEERING": "CSE", "COMPUTER SCIENCE AND ENGINEERING": "CSE", "CSE": "CSE",
+                "BE MECHANICAL ENGINEERING": "MECH", "MECHANICAL ENGINEERING": "MECH", "MECH": "MECH",
+                "BE ELECTRICAL COMMUNICATION ENGINEERING": "ECE", "ELECTRICAL COMMUNICATION ENGINEERING": "ECE", "ECE": "ECE",
+                "BE ELECTRICAL AND ELECTRONICS ENGINEERING": "EEE", "ELECTRICAL AND ELECTRONICS ENGINEERING": "EEE", "EEE": "EEE",
+                "BE CIVIL ENGINEERING": "CIVIL", "CIVIL ENGINEERING": "CIVIL", "CIVIL": "CIVIL",
+                "BE INFORMATION TECHNOLOGY": "CSE", "INFORMATION TECHNOLOGY": "CSE", "IT": "CSE",
+            }
             
-            return sh.handle_staff_query(
-                query, 
-                course_code, 
-                self.staff_data, 
-                resolver,
-                session_course=session_course
-            )
+            target_dept = self._dept_router.department
+            for d in depts:
+                if re.search(r'\b' + d + r'\b', q_upper):
+                    target_dept = mapping.get(d, d)
+                    break
+                    
+            if not getattr(self, "staff_pipeline", None):
+                return "The Staff pipeline was not initialized."
+
+            res = self.staff_pipeline.query(query, target_dept)
+            return res.get("answer", "No answer generated.")
 
         if query_type == QT_OBJECTIVES:
             return sh.handle_objectives(course_code, store)
@@ -468,7 +464,11 @@ class AcademicRAGSystem:
             return sh.handle_unit_list(course_code, store)
 
         if query_type == QT_CREDITS:
-            return sh.handle_credits(course_code, resolver)
+            answer, new_ambs = sh.handle_credits(
+                course_code, self.last_course_name, resolver, query, self.last_ambiguities
+            )
+            self.last_ambiguities = new_ambs
+            return answer
         if query_type == QT_COURSE_NAME:
             return sh.handle_course_name(course_code, resolver)
         if query_type == QT_COURSE_CODE:
@@ -478,7 +478,18 @@ class AcademicRAGSystem:
             self.last_ambiguities = new_ambs
             return answer
         if query_type == QT_CREDITS_COMPARE:
-            return sh.handle_credits_compare(query, resolver, verbose)
+            semester_match = re.search(r'\b(?:sem(?:e)?ster|sem)\s+([1-8ivx]+)\b', query.lower())
+            if not semester_match:
+                semester_match = re.search(r'\b([1-8ivx]+)(?:st|nd|rd|th)?\s+sem(?:e)?ster\b', query.lower())
+            sem_num = None
+            if semester_match:
+                val = semester_match.group(1).lower()
+                roman_map = {'i': 1, 'ii': 2, 'iii': 3, 'iv': 4, 'v': 5, 'vi': 6, 'vii': 7, 'viii': 8}
+                if val in roman_map:
+                    sem_num = roman_map[val]
+                elif val.isdigit():
+                    sem_num = int(val)
+            return sh.handle_credits_compare(query, resolver, semester_num=sem_num, verbose=verbose)
 
         if query_type == QT_UNIT_CONTENT:
             return sh.handle_unit_content(course_code, unit_number, self.vector_db)
@@ -547,8 +558,9 @@ class AcademicRAGSystem:
                     return code, name
         
         # Generic resolver (non-metadata queries)
-        if query_type not in {QT_COURSE_NAME, QT_COURSE_CODE, QT_CREDITS, "STAFF_INFO"}:
-            code, name, _ = resolver.resolve_code(query_text, allow_fuzzy=False)
+        if query_type not in {QT_COURSE_NAME, QT_COURSE_CODE, "STAFF_INFO"}:
+            allow_fuzz = (query_type == QT_CREDITS)
+            code, name, _ = resolver.resolve_code(query_text, allow_fuzzy=allow_fuzz)
             if code:
                 return code, name
 
@@ -589,7 +601,7 @@ class AcademicRAGSystem:
 
     def _is_semester_query(self, query: str) -> bool:
         q = query.lower()
-        sem = [r'\bsemester\s+\d+\b', r'\bsem\s+\d+\b', r'\b\d+(?:st|nd|rd|th)\s+semester\b']
+        sem = [r'\bsem(?:e)?ster\s+[1-8ivx]+\b', r'\bsem\s+[1-8ivx]+\b', r'\b[1-8ivx]+(?:st|nd|rd|th)?\s+sem(?:e)?ster\b']
         agg = [r'\bnumber\s+of\b', r'\bhow\s+many\b', r'\btotal\b', r'\bhighest\b', r'\blowest\b', r'\baverage\b', r'\bcount\b']
         return (any(re.search(p, q) for p in sem) and any(re.search(p, q) for p in agg))
 

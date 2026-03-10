@@ -100,15 +100,15 @@ class DepartmentRouter:
             from course_resolver import CourseCodeResolver
             resolver = CourseCodeResolver(department=dept)
 
-            mapping_file = Path(f"{dept}_course_mappings.txt")
+            mapping_file = Path(f"data/{dept}/{dept}_course_mappings.txt")
             if not mapping_file.exists():
-                mapping_file = Path("course_mappings.txt")
+                mapping_file = Path("data/general/course_mappings.txt")
             if mapping_file.exists():
                 with open(mapping_file, 'r', encoding='utf-8') as f:
                     resolver.load_mappings(f.read())
 
             # v5.x: acronym loading moved into course mappings / synonym system
-            acronym_path = Path(f"{dept}_acronyms.json")
+            acronym_path = Path(f"data/{dept}/{dept}_acronyms.json")
             if acronym_path.exists() and hasattr(resolver, "load_acronyms"):
                 resolver.load_acronyms(acronym_path)
 

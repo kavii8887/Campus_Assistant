@@ -24,3 +24,16 @@ class OllamaClient:
 
     def get_embedding_dim(self):
         return len(self.embed_single("test"))
+
+    def generate(self, prompt: str) -> str:
+        r = requests.post(
+            self.generate_endpoint,
+            json={
+                "model": self.llm_model,
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=180
+        )
+        r.raise_for_status()
+        return r.json()["response"]

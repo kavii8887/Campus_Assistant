@@ -26,6 +26,8 @@ class CourseCodeResolver:
         'advanced': 'adv',
         'laboratory': 'lab',
         'practical': 'lab',
+        'datastructures': 'data structures',
+        'datastructure': 'data structures',
     }
     
     STRUCTURAL_KEYWORDS = {
@@ -36,8 +38,9 @@ class CourseCodeResolver:
         'outcomes', 'outcome', 'textbook', 'textbooks', 'reference', 'references',
         'first', 'second', 'third', 'fourth', 'fifth',
         'about', 'explain', 'describe', 'summarize', 'summary',
-        'name', 'code', 'course', 'exercises', 'exercise',
-        'content', 'section', 'sections', 'module', 'modules'
+        'name', 'code', 'course', 'subject', 'subjects', 'exercises', 'exercise',
+        'content', 'section', 'sections', 'module', 'modules',
+        'total', 'sum', 'all'
     }
     
     def __init__(self, department: str = "CSE"):
@@ -213,6 +216,19 @@ class CourseCodeResolver:
                 results.append((code2, name2))
                 seen_codes.add(code2)
         
+        return results
+    
+    def get_courses_by_semester(self, semester_num: int) -> List[Tuple[str, str]]:
+        """Fetch all courses that belong to a specific semester."""
+        results = []
+        for code, name in self.code_to_name.items():
+            # For AU Regulation 2021 codes, the format is usually XX3YZZ where Y is the semester.
+            # E.g., GE3151 -> Sem 1, CS3451 -> Sem 4
+            match = re.search(r'[A-Z]{2,3}3(\d)', code.upper())
+            if match:
+                sem_digit = int(match.group(1))
+                if sem_digit == semester_num:
+                    results.append((code, name))
         return results
     
     def _normalize_name(self, name: str) -> str:

@@ -133,18 +133,44 @@ def handle_unit_list(course_code: str, store) -> str:
 
 # ── CourseCodeResolver handlers (BUG FIX 6) ──────────────────────────────────
 
-def handle_credits(course_code: Optional[str], resolver) -> str:
+def handle_credits(
+    course_code: Optional[str],
+    course_name: Optional[str],
+    resolver,
+    query: str,
+    last_ambiguities: List[Tuple[str, str]],
+) -> Tuple[str, List[Tuple[str, str]]]:
     """BUG FIX 6: More conversational responses."""
-    if not course_code:
-        return "Which course's credits would you like to know?"
-    
-    credits = resolver.get_credits_from_code(course_code)
-    name = resolver.get_name_from_code(course_code) or course_code
-    
-    if credits:
-        return f"{name} ({course_code}) is worth {credits} credits."
-    
-    return f"I couldn't find credit information for {course_code}."
+    if course_code:
+        credits = resolver.get_credits_from_code(course_code)
+        name = resolver.get_name_from_code(course_code) or course_name or course_code
+        if credits:
+            return f"{name} ({course_code}) is worth {credits} credits.", []
+        return f"I couldn't find credit information for {course_code}.", []
+
+    # Try to resolve code manually
+    detected_code, detected_name, ambiguities = resolver.resolve_code(query, allow_fuzzy=True)
+
+    if ambiguities:
+        unique: Dict[str, str] = {}
+        for amb in ambiguities:
+            code = amb.split('(')[1].rstrip(')')
+            name = amb.split('(')[0].strip()
+            unique[code] = name
+        new_ambs = list(unique.items())
+        msg = "I found multiple courses. Could you be more specific or enter a number?\n" + "\n".join(
+            f"{i + 1}. {n} ({c})" for i, (c, n) in enumerate(new_ambs)
+        )
+        return msg, new_ambs
+
+    if detected_code:
+        credits = resolver.get_credits_from_code(detected_code)
+        actual_name = resolver.get_name_from_code(detected_code) or detected_name
+        if credits:
+            return f"{actual_name} ({detected_code}) is worth {credits} credits.", []
+        return f"I couldn't find credit information for {detected_code}.", []
+
+    return "Which course's credits would you like to know?", []
 
 
 def handle_course_name(course_code: Optional[str], resolver) -> str:
@@ -198,20 +224,25 @@ def handle_course_code(
     return "I couldn't find that course in the database. Could you check the course name?", []
 
 
-def handle_credits_compare(query: str, resolver, verbose: bool = False) -> str:
-    """Handle multi-course credit comparison."""
-    courses = resolver.resolve_multiple_codes(query)
+def handle_credits_compare(query: str, resolver, semester_num: Optional[int] = None, verbose: bool = False) -> str:
+    """Handle multi-course credit comparison and semester aggregations."""
+    if semester_num:
+        courses = resolver.get_courses_by_semester(semester_num)
+        if not courses:
+            return f"I couldn't find any courses for semester {semester_num}."
+    else:
+        courses = resolver.resolve_multiple_codes(query)
 
-    if len(courses) < 2:
-        if verbose:
-            print(f"  Primary resolution found {len(courses)} courses, trying acronym scan...")
-        courses = _scan_acronyms_for_credits(query, resolver)
+        if len(courses) < 2:
+            if verbose:
+                print(f"  Primary resolution found {len(courses)} courses, trying acronym scan...")
+            courses = _scan_acronyms_for_credits(query, resolver)
 
-    if len(courses) < 2:
-        return "Please specify two courses to compare credits. For example: 'compare credits of OOP and OOP Lab'"
+        if len(courses) < 2:
+            return "Please specify two courses to compare credits. For example: 'compare credits of OOP and OOP Lab'"
 
     q = query.lower()
-    if "total" in q or "sum" in q:
+    if "total" in q or "sum" in q or semester_num:
         total = 0
         for code, name in courses:
             cstr = resolver.get_credits_from_code(code)
@@ -220,6 +251,10 @@ def handle_credits_compare(query: str, resolver, verbose: bool = False) -> str:
                     total += int(cstr.split('-')[0])
                 except ValueError:
                     pass
+        if semester_num:
+            return f"Total credits for Semester {semester_num}: {total}\n\nCourses included:\n" + "\n".join(
+                [f"• {name} ({code}): {resolver.get_credits_from_code(code) or 0}" for code, name in courses]
+            )
         return f"Total credits: {total}"
 
     lines = []
@@ -377,102 +412,86 @@ def handle_full_syllabus_multi(query: str, resolver, vector_db) -> str:
 def handle_staff_query(
     query: str,
     course_code: Optional[str],
-    staff_data: Optional[Dict],
+    staff_vdb,
+    query_embedding: List[float],
     resolver,
     session_course: Optional[str] = None
 ) -> str:
     """
-    Deterministic staff lookup (NO LLM).
-    NOW supports session context for "this course" references.
+    RAG-driven staff lookup (NO LLM inference).
+    Performs quick semantic retrieval and formats the results gracefully.
     """
-    if staff_data is None or not staff_data.get('staff'):
-        return "Staff data isn't available right now."
+    if staff_vdb is None:
+        return "Staff directory isn't available for this department right now."
     
     q = query.lower()
     
-    # ── Detect query intent ───────────────────────────────────────────────────
-    is_list_dept_faculty = any(t in q for t in ['list faculty', 'list staff', 'faculty in', 'staff in', 'professors in'])
-    is_who_teaches = any(t in q for t in ['who teaches', 'who is teaching', 'instructor for', 'professor for', 'faculty for'])
-    is_this_course = any(t in q for t in ['this course', 'this subject', 'it'])
+    # Check if this is a specific lookup vs a generic list query
+    import re
+    is_list_query = bool(re.search(r'\b(list|show|all)\b.*\b(faculty|staff[s]?|professors?|instructors?|lecturers?)\b', q))
+    is_hod_query = any(t in q for t in ['hod', 'head of department', 'head of the department'])
     
-    # ── Department list query ─────────────────────────────────────────────────
-    if is_list_dept_faculty:
-        dept_match = None
-        for dept in ['CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'IT']:
-            if dept.lower() in q:
-                dept_match = dept
+    # Retrieve closest staff profiles
+    top_k_val = 50 if is_list_query else 3
+    chunks = staff_vdb.search(query_embedding, top_k=top_k_val)
+    
+    if is_hod_query:
+        # Find the chunk that actually mentions HOD/Head
+        hod_chunk = None
+        for c in chunks:
+            desig = c.get('metadata', {}).get('designation', '').lower()
+            if 'head' in desig or 'hod' in desig:
+                hod_chunk = c
                 break
         
-        if not dept_match:
-            return "Which department's faculty would you like to see? (e.g., CSE, ECE, EEE)"
+        # Fallback to the top score if designation wasn't parsed correctly
+        if not hod_chunk and chunks:
+            hod_chunk = chunks[0]
+            
+        if hod_chunk:
+            metadata = hod_chunk.get('metadata', {})
+            name = metadata.get('staff_name', 'Unknown')
+            desig = metadata.get('designation', 'Professor')
+            dept = metadata.get('department', '')
+            
+            return f"The Head of the Department for {dept} is {name} ({desig}).\n\nContact: {metadata.get('email', 'N/A')}"
+
+    # Default to a summarized single-result response for non-list questions to mimic LLM behavior
+    if not is_list_query and chunks:
+        c = chunks[0]
+        metadata = c.get('metadata', {})
+        name = metadata.get('staff_name', 'Unknown')
+        desig = metadata.get('designation', 'Faculty')
+        dept = metadata.get('department', '')
         
-        faculty = [s for s in staff_data['staff'] if s.get('department', '').upper() == dept_match]
-        
-        if not faculty:
-            return f"I don't have staff data for {dept_match} department."
-        
-        lines = [f"FACULTY — {dept_match} DEPARTMENT", "=" * 60, ""]
-        for s in faculty:
-            line = f"• {s.get('name', 'Unknown')}"
-            if s.get('designation'):
-                line += f" — {s['designation']}"
-            if s.get('email'):
-                line += f"\n  Email: {s['email']}"
-            if s.get('subjects'):
-                subj_names = []
-                for code in s['subjects']:
-                    name = resolver.get_name_from_code(code)
-                    subj_names.append(f"{name} ({code})" if name else code)
-                line += f"\n  Teaches: {', '.join(subj_names)}"
-            lines.append(line)
-        
-        return "\n".join(lines)
+        ans = f"{name} is a {desig} in the {dept} department."
+        if metadata.get('email'):
+            ans += f"\nEmail: {metadata['email']}"
+        return ans
+
+    # If it's a list query, return the directory view
+    lines = ["FACULTY DIRECTORY", "=" * 60, ""]
     
-    # ── Who teaches course query ──────────────────────────────────────────────
-    if is_who_teaches or course_code or is_this_course:
-        target_code = course_code
+    for c in chunks:
+        if c.get('score', 0) < 0.4:  
+            continue
+            
+        metadata = c.get('metadata', {})
+        name = metadata.get('staff_name', 'Unknown')
         
-        if not target_code and is_this_course and session_course:
-            target_code = session_course
+        line = f"• {name}"
+        if metadata.get('designation'):
+            line += f" — {metadata['designation']}"
+        if metadata.get('email'):
+            line += f"\n  Email: {metadata['email']}"
+            
+        lines.append(line)
+        lines.append("")
         
-        if not target_code:
-            target_code = _extract_course_code_from_query(query)
+    if len(lines) == 3: 
+        return "I couldn't find any relevant staff matching your query."
         
-        if not target_code:
-            code, name, _ = resolver.resolve_code(query, allow_fuzzy=False)
-            if code:
-                target_code = code
-        
-        if not target_code:
-            return "Which course are you asking about?"
-        
-        instructors = [
-            s for s in staff_data['staff']
-            if target_code.upper() in [c.upper() for c in s.get('subjects', [])]
-        ]
-        
-        if not instructors:
-            course_name = resolver.get_name_from_code(target_code)
-            return f"I don't have instructor information for {course_name or target_code}."
-        
-        course_name = resolver.get_name_from_code(target_code) or target_code
-        lines = [f"INSTRUCTORS — {course_name} ({target_code})", "=" * 60, ""]
-        
-        for s in instructors:
-            line = f"• {s.get('name', 'Unknown')}"
-            if s.get('designation'):
-                line += f" — {s['designation']}"
-            if s.get('email'):
-                line += f"\n  Email: {s['email']}"
-            if s.get('department'):
-                line += f"\n  Department: {s['department']}"
-            if s.get('area_of_specialization'):
-                line += f"\n  Specialization: {s['area_of_specialization']}"
-            lines.append(line)
-        
-        return "\n".join(lines)
-    
-    return "What staff information would you like? (e.g., 'who teaches GE3151' or 'list faculty in CSE')"
+    return "\n".join(lines).strip()
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
