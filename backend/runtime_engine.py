@@ -18,6 +18,7 @@ from routing import (
     QT_OBJECTIVES, QT_OUTCOMES, QT_TEXTBOOKS, QT_REFERENCES,
     QT_LAB_EXERCISES, QT_UNIT_LIST,
     QT_ATTENDANCE_PERCENTAGE, QT_ATTENDANCE_STATUS, QT_ATTENDANCE_COUNT,
+    QT_TIMETABLE,
     STRUCTURED_STORE_TYPES, ATTENDANCE_TYPES, ALL_STRUCTURED_TYPES,
 )
 import structured_handlers as sh
@@ -68,11 +69,12 @@ class AcademicRAGSystem:
 
         self.session_manager = None
         if enable_sessions and _SESSION_AVAILABLE:
-            self.session_manager = SessionManager(default_timeout=1800)
+            self.session_manager = SessionManager(default_timeout=1800)  # type: ignore[misc]
             print("✓ Session manager enabled (30 min timeout)")
 
         try:
-            from ollama_client import OllamaClient
+            from ollama_client import OllamaClient as _OllamaClient
+            OllamaClient = _OllamaClient  # type: ignore[assignment]
         except ImportError:
             import requests as _req
 
@@ -138,6 +140,10 @@ class AcademicRAGSystem:
     def structured_store(self):
         return self._dept_router.structured_store
 
+    @property
+    def timetable_pipeline(self):
+        return self._dept_router.timetable_db
+
     def get_available_departments(self) -> List[str]:
         return self._dept_router.get_available_departments()
 
@@ -165,7 +171,7 @@ class AcademicRAGSystem:
         # ── Bare course code detection ────────────────────────────────────────
         bare_code = self._is_bare_course_code(query_text)
         if bare_code:
-            name = self.course_resolver.get_name_from_code(bare_code)
+            name = self.course_resolver.get_name_from_code(bare_code)  # type: ignore[union-attr]
             if name:
                 # BUG FIX 4: Update session for bare code queries too
                 self.last_course_code = bare_code
@@ -239,7 +245,7 @@ class AcademicRAGSystem:
 
         # ── Multi-course unit split ───────────────────────────────────────────
         if unit_number and re.search(r'\band\b', query_text, re.IGNORECASE):
-            multi = self.course_resolver.resolve_multiple_codes(query_text)
+            multi = self.course_resolver.resolve_multiple_codes(query_text)  # type: ignore[union-attr]
             if len(multi) >= 2:
                 if verbose:
                     print(f"[MULTI-COURSE UNIT] Splitting into {len(multi)} queries\n")
@@ -281,13 +287,13 @@ class AcademicRAGSystem:
         if not resolved_code and not is_structured and not is_lab_query:
             if session_course:
                 resolved_code = session_course
-                resolved_name = self.course_resolver.get_name_from_code(session_course)
+                resolved_name = self.course_resolver.get_name_from_code(session_course)  # type: ignore[union-attr]
                 if verbose:
                     print(f"[SESSION] Semantic follow-up → {resolved_name} ({resolved_code})\n")
 
         # Name consistency validation
         if resolved_code:
-            actual_name = self.course_resolver.get_name_from_code(resolved_code)
+            actual_name = self.course_resolver.get_name_from_code(resolved_code)  # type: ignore[union-attr]
             if actual_name and actual_name != resolved_name:
                 if verbose:
                     print(f"[VALIDATION] Name corrected: {resolved_name} → {actual_name}")
@@ -379,6 +385,36 @@ class AcademicRAGSystem:
         # ── Semantic lane ─────────────────────────────────────────────────────
         if verbose:
             print(f"[ROUTING] SEMANTIC LANE\n")
+
+        if query_type == QT_TIMETABLE:
+            if verbose:
+                print(f"[TIMETABLE] Using deterministic TimetablePipeline\n")
+            if not self.timetable_pipeline:
+                return self._blocked("Timetable data is not available for this department.")
+
+            # Extract student year from session
+            student_year = None
+            if session_id and self.session_manager:
+                session = self.session_manager.get_session(session_id)
+                if session and hasattr(session, 'student_year'):
+                    student_year = session.student_year
+
+            result = self.timetable_pipeline.query(
+                query=query_text,
+                target_dept=active_dept,
+                year=student_year,
+                verbose=verbose,
+            )
+            return {
+                "query": query_text,
+                "answer": result.get("answer", "No answer generated."),
+                "method": result.get("method", "timetable_pipeline"),
+                "chunks_retrieved": 0,
+                "chunks_used": 0,
+                "llm_used": result.get("method") != "timetable_direct_bypass",
+                "processing_time": 0.1,
+            }
+
         return self._semantic.answer(
             query=query_text,
             course_code=resolved_code,
@@ -447,21 +483,21 @@ class AcademicRAGSystem:
             if not getattr(self, "staff_pipeline", None):
                 return "The Staff pipeline was not initialized."
 
-            res = self.staff_pipeline.query(query, target_dept)
+            res = self.staff_pipeline.query(query, target_dept or "")
             return res.get("answer", "No answer generated.")
 
         if query_type == QT_OBJECTIVES:
-            return sh.handle_objectives(course_code, store)
+            return sh.handle_objectives(course_code or "", store)
         if query_type == QT_OUTCOMES:
-            return sh.handle_outcomes(course_code, store)
+            return sh.handle_outcomes(course_code or "", store)
         if query_type == QT_TEXTBOOKS:
-            return sh.handle_textbooks(course_code, store)
+            return sh.handle_textbooks(course_code or "", store)
         if query_type == QT_REFERENCES:
-            return sh.handle_references(course_code, store)
+            return sh.handle_references(course_code or "", store)
         if query_type == QT_LAB_EXERCISES:
-            return sh.handle_lab_exercises(course_code, store)
+            return sh.handle_lab_exercises(course_code or "", store)
         if query_type == QT_UNIT_LIST:
-            return sh.handle_unit_list(course_code, store)
+            return sh.handle_unit_list(course_code or "", store)
 
         if query_type == QT_CREDITS:
             answer, new_ambs = sh.handle_credits(
@@ -507,7 +543,7 @@ class AcademicRAGSystem:
             self.last_ambiguities = new_ambs
             if res_code and res_code != course_code:
                 self.last_course_code = res_code
-                self.last_course_name = resolver.get_name_from_code(res_code)
+                self.last_course_name = resolver.get_name_from_code(res_code)  # type: ignore[union-attr]
             return answer
 
         return "Not found."
@@ -525,7 +561,7 @@ class AcademicRAGSystem:
         explicit = self._extract_course_code(query_text)
         
         if explicit:
-            name = resolver.get_name_from_code(explicit)
+            name = resolver.get_name_from_code(explicit)  # type: ignore[union-attr]
             if name:
                 if verbose:
                     print(f"[EXPLICIT CODE] {explicit} → {name}\n")
@@ -540,7 +576,7 @@ class AcademicRAGSystem:
         if query_type == QT_COURSE_NAME:
             course_name_in_query = self._extract_entity_for_metadata_query(query_text, "name")
             if course_name_in_query and course_name_in_query.strip() and course_name_in_query != query_text:
-                code, name, _ = resolver.resolve_code(course_name_in_query, allow_fuzzy=False)
+                code, name, _ = resolver.resolve_code(course_name_in_query, allow_fuzzy=False)  # type: ignore[union-attr]
                 if code:
                     if verbose:
                         print(f"[EXPLICIT NAME] Resolved '{course_name_in_query}' → {name} ({code})\n")
@@ -551,26 +587,83 @@ class AcademicRAGSystem:
             from structured_handlers import _extract_course_name_for_code_query
             name_q = _extract_course_name_for_code_query(query_text)
             if name_q and name_q != query_text:
-                code, name, _ = resolver.resolve_code(name_q, allow_fuzzy=False)
+                code, name, _ = resolver.resolve_code(name_q, allow_fuzzy=False)  # type: ignore[union-attr]
                 if code:
                     if verbose:
                         print(f"[EXPLICIT NAME] Resolved '{name_q}' → {name} ({code})\n")
                     return code, name
         
+        # For structured store types, try extracting the subject name explicitly
+        if query_type in {QT_OBJECTIVES, QT_OUTCOMES, QT_TEXTBOOKS, QT_REFERENCES,
+                          QT_LAB_EXERCISES, QT_UNIT_LIST, QT_FULL_SYLLABUS,
+                          QT_UNIT_CONTENT, QT_CREDITS}:
+            # Strip common prefix/suffix words to isolate the subject name
+            q_stripped = query_text.lower()
+            for prefix in ['what are the ', 'list ', 'show ', 'give me ', 'get ',
+                           'objectives of ', 'objectives for ', 'outcomes of ', 'outcomes for ',
+                           'textbooks for ', 'textbooks of ', 'textbook for ', 'textbook of ',
+                           'references for ', 'references of ', 'reference for ',
+                           'lab exercises for ', 'lab exercises of ',
+                           'units in ', 'units of ', 'units for ',
+                           'unit list for ', 'unit list of ',
+                           'syllabus for ', 'syllabus of ', 'full syllabus for ',
+                           'credits for ', 'credits of ', 'how many credits for ',
+                           'how many credits does ', 'how many credits of ',
+                           'unit 1 of ', 'unit 2 of ', 'unit 3 of ', 'unit 4 of ', 'unit 5 of ',
+                           'unit i of ', 'unit ii of ', 'unit iii of ', 'unit iv of ', 'unit v of ']:
+                if q_stripped.startswith(prefix):
+                    q_stripped = q_stripped[len(prefix):]
+                    break
+            for suffix in [' have', ' has', ' got', '?', '.']:
+                if q_stripped.endswith(suffix):
+                    q_stripped = q_stripped[:-len(suffix)]
+            q_stripped = q_stripped.strip()
+            if q_stripped and q_stripped != query_text.lower():
+                code, name, _ = resolver.resolve_code(q_stripped, allow_fuzzy=True)  # type: ignore[union-attr]
+                if code:
+                    if verbose:
+                        print(f"[ENTITY EXTRACT] Resolved '{q_stripped}' → {name} ({code})\n")
+                    return code, name
+                
+                # Fallback: if resolve_code returned None (ambiguous multi-match),
+                # search through all mappings and prefer the theory course
+                code_to_name = getattr(resolver, 'code_to_name', None)
+                if code_to_name and isinstance(code_to_name, dict):
+                    q_norm = re.sub(r'[^a-z]', '', q_stripped.lower())
+                    candidates = []
+                    for ccode, cname in code_to_name.items():
+                        if isinstance(cname, str):
+                            cname_norm = re.sub(r'[^a-z]', '', cname.lower())
+                            if q_norm in cname_norm or cname_norm in q_norm:
+                                is_lab = any(w in cname.lower() for w in ['laboratory', 'lab', 'practical'])
+                                candidates.append((ccode, cname, is_lab))
+                    
+                    if candidates:
+                        # Prefer non-lab courses
+                        non_lab = [c for c in candidates if not c[2]]
+                        if non_lab:
+                            code, name, _ = non_lab[0]
+                        else:
+                            code, name, _ = candidates[0]
+                        if verbose:
+                            print(f"[MULTI-MATCH RESOLVE] '{q_stripped}' → {name} ({code})\n")
+                        return code, name
+
         # Generic resolver (non-metadata queries)
         if query_type not in {QT_COURSE_NAME, QT_COURSE_CODE, "STAFF_INFO"}:
             allow_fuzz = (query_type == QT_CREDITS)
-            code, name, _ = resolver.resolve_code(query_text, allow_fuzzy=allow_fuzz)
+            code, name, _ = resolver.resolve_code(query_text, allow_fuzzy=allow_fuzz)  # type: ignore[union-attr]
             if code:
                 return code, name
 
         # BUG FIX 4: Session fallback for queries without explicit entities
         # This is critical for "unit 1" to work after "CCS342 subject name"
         if query_type in {QT_UNIT_CONTENT, QT_CREDITS, QT_COURSE_NAME, "STAFF_INFO", 
-                          QT_OBJECTIVES, QT_OUTCOMES, QT_TEXTBOOKS, QT_REFERENCES}:
+                          QT_OBJECTIVES, QT_OUTCOMES, QT_TEXTBOOKS, QT_REFERENCES,
+                          QT_LAB_EXERCISES, QT_UNIT_LIST, QT_FULL_SYLLABUS}:
             session_course = self._get_session_course(session_id)
             if session_course:
-                sc_name = resolver.get_name_from_code(session_course)
+                sc_name = resolver.get_name_from_code(session_course)  # type: ignore[union-attr]
                 if verbose:
                     print(f"[SESSION FALLBACK] {query_type} using session course → {sc_name} ({session_course})\n")
                 return session_course, sc_name
@@ -587,7 +680,7 @@ class AcademicRAGSystem:
         m = re.match(r'^([A-Z]{2,4})(\d{3,5})$', q)
         if m:
             code = f"{m.group(1)}{m.group(2)}"
-            if self.course_resolver.get_name_from_code(code):
+            if self.course_resolver.get_name_from_code(code):  # type: ignore[union-attr]
                 return code
         return None
 
@@ -616,7 +709,7 @@ class AcademicRAGSystem:
             m = re.search(p, normalized_query)
             if m:
                 code = f"{m.group(1)}{m.group(2)}".upper()
-                if self.course_resolver.get_name_from_code(code):
+                if self.course_resolver.get_name_from_code(code):  # type: ignore[union-attr]
                     return code
                 if self._is_valid_code_format(code):
                     return code

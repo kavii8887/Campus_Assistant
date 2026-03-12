@@ -231,19 +231,25 @@ def handle_attendance_percentage(
     if not all([register_no, department, year, semester]):
         return "Attendance information requires student details (register number, department, year, semester). Please contact administrator."
     
+    # At this point all values are guaranteed non-None
+    register_no_val: str = str(register_no)
+    department_val: str = str(department)
+    year_val: int = int(year)  # type: ignore[arg-type]
+    semester_val: str = str(semester)
+    
     # Load data
-    df = load_attendance_dataframe(department, year, semester, persist_path)
+    df = load_attendance_dataframe(department_val, year_val, semester_val, persist_path)
     
     if df is None:
-        return f"No attendance data found for {department} Year {year} {semester.upper()} semester."
+        return f"No attendance data found for {department_val} Year {year_val} {semester_val.upper()} semester."
     
     # Calculate percentages
-    subject_percentages = calculate_subject_percentages(df, register_no)
+    subject_percentages = calculate_subject_percentages(df, register_no_val)
     
     if not subject_percentages:
-        return f"No attendance records found for Register No: {register_no}"
+        return f"No attendance records found for Register No: {register_no_val}"
     
-    overall = calculate_overall_percentage(df, register_no)
+    overall = calculate_overall_percentage(df, register_no_val)
     status = get_attendance_status(overall) if overall else "Unknown"
     
     # Format response
@@ -278,17 +284,23 @@ def handle_attendance_status(
     if not all([register_no, department, year, semester]):
         return "Attendance status requires student details. Please contact administrator."
     
+    # At this point all values are guaranteed non-None
+    register_no_val: str = str(register_no)
+    department_val: str = str(department)
+    year_val: int = int(year)  # type: ignore[arg-type]
+    semester_val: str = str(semester)
+    
     # Load data
-    df = load_attendance_dataframe(department, year, semester, persist_path)
+    df = load_attendance_dataframe(department_val, year_val, semester_val, persist_path)
     
     if df is None:
-        return f"No attendance data available for {department} Year {year} {semester.upper()} semester."
+        return f"No attendance data available for {department_val} Year {year_val} {semester_val.upper()} semester."
     
     # Calculate overall percentage
-    overall = calculate_overall_percentage(df, register_no)
+    overall = calculate_overall_percentage(df, register_no_val)
     
     if overall is None:
-        return f"No attendance records found for Register No: {register_no}"
+        return f"No attendance records found for Register No: {register_no_val}"
     
     # Get status
     status = get_attendance_status(overall)
@@ -316,11 +328,16 @@ def handle_attended_classes(
     if not all([register_no, department, year, semester]):
         return "Class attendance information requires student details. Please contact administrator."
     
+    # At this point all values are guaranteed non-None
+    department_val: str = str(department)
+    year_val: int = int(year)  # type: ignore[arg-type]
+    semester_val: str = str(semester)
+    
     # Load data
-    df = load_attendance_dataframe(department, year, semester, persist_path)
+    df = load_attendance_dataframe(department_val, year_val, semester_val, persist_path)
     
     if df is None:
-        return f"No attendance data found for {department} Year {year} {semester.upper()} semester."
+        return f"No attendance data found for {department_val} Year {year_val} {semester_val.upper()} semester."
     
     # Find register number column
     register_no = str(register_no).strip().upper()

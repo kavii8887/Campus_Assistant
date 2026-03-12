@@ -19,7 +19,7 @@ import re
 import hashlib
 import argparse
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from dataclasses import dataclass
 
 from ollama_client import OllamaClient
@@ -235,5 +235,4 @@ def main():
 
 
 if __name__ == "__main__":
-    from typing import Optional
     main()

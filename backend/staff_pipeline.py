@@ -252,8 +252,19 @@ class StaffPipeline:
             if score > 10:
                 matches.append((i, score))
 
+        if not matches:
+            return []
+
         matches.sort(key=lambda x: -x[1])
-        return [i for i, _ in matches]
+        best_score = matches[0][1]
+        
+        # Only keep matches that are reasonably close to the best score
+        if best_score >= 40:
+            threshold = best_score - 10
+        else:
+            threshold = best_score - 20
+            
+        return [i for i, score in matches if score >= threshold]
 
     # ─── DIRECT PYTHON ANSWERS (bypass LLM for simple factual queries) ────────
 
@@ -319,7 +330,7 @@ class StaffPipeline:
 
     # ─── QUERY ───────────────────────────────────────────────────────────────
 
-    def query(self, query_text: str, current_dept: str = None) -> Dict[str, Any]:
+    def query(self, query_text: str, current_dept: Optional[str] = None) -> Dict[str, Any]:
         """
         1. Python filter narrows records
         2. Try direct Python answer (no LLM needed for simple facts)
@@ -338,31 +349,74 @@ class StaffPipeline:
             print(f"  [StaffRAG] Direct Python answer (no LLM needed)")
             return self._result(query_text, direct, "direct_python")
 
-        # Step 3: LLM with filtered or full context
+        # Step 3: Direct retrieval formatting (Bypass LLM)
         if matched_indices:
-            context_lines = [self.record_lines[i] for i in matched_indices[:10]]
-            context = "\n".join(context_lines)
-            method = "filtered"
-        else:
-            context = self.full_context
-            method = "full_context"
+            # Determine what info the user wants
+            q_lo = query_text.lower()
+            wants_phone = any(w in q_lo for w in ['phone', 'number', 'mobile', 'contact number', 'call'])
+            wants_email = any(w in q_lo for w in ['email', 'mail', 'e-mail'])
+            wants_contact = wants_phone or wants_email or 'contact' in q_lo
+            wants_qualification = any(w in q_lo for w in ['qualification', 'degree', 'education'])
+            wants_specialization = any(w in q_lo for w in ['specialization', 'specialisation', 'research', 'expertise', 'area'])
+            wants_who = any(w in q_lo for w in ['who is', 'who are', 'hod', 'head of', 'name of'])
+            wants_list = any(w in q_lo for w in ['list', 'all ', 'details', 'info', 'information', 'profile'])
+            
+            # If no specific info requested, show concise answer
+            show_all = wants_list or (not wants_contact and not wants_who and not wants_qualification and not wants_specialization)
+            
+            answers_list = []
+            for i in matched_indices[:5]:  # Cap at top 5
+                rec = self.records[i]
+                info = [f"**{rec.get('name', 'N/A')}**"]
+                
+                if rec.get("designation"):
+                    info.append(f"Designation: {rec['designation']}")
+                
+                if show_all or wants_who:
+                    if rec.get("department_full"):
+                        info.append(f"Department: {rec['department_full']}")
+                
+                if show_all or wants_contact or wants_email:
+                    if rec.get("email"):
+                        info.append(f"Email: {rec['email']}")
+                
+                if show_all or wants_contact or wants_phone:
+                    if rec.get("phone"):
+                        info.append(f"Phone: {rec['phone']}")
+                
+                if show_all or wants_qualification:
+                    if rec.get("qualification"):
+                        info.append(f"Qualification: {rec['qualification']}")
+                
+                if show_all or wants_specialization:
+                    if rec.get("specialization"):
+                        info.append(f"Specialization: {rec['specialization']}")
+                
+                answers_list.append(" | ".join(info))
+            
+            final_answer = "\n\n".join(answers_list)
+            print(f"  [StaffRAG] Direct formatting bypass: {len(matched_indices)} records")
+            return self._result(query_text, final_answer, "staff_direct_bypass")
+            
+        # Step 4: LLM fallback (When no records match, let the LLM reply using full context)
+        context = self.full_context
+        method = "full_context"
 
-        prompt = f"""You are a college staff directory assistant. Answer the question using ONLY the data below.
+        prompt = f"""You are a data extraction assistant. Answer the question using ONLY the data below.
 
 STRICT RULES:
-1. Use ONLY data explicitly written below. Do NOT invent or guess.
-2. If a specific field (phone, email, etc.) is NOT present for that person in the data below, say "That information is not available in the staff directory."
+1. Extract the exact answer from the data. Do NOT invent or guess.
+2. If the answer is NOT present in the data below, you MUST output exactly: "That information is not available in the staff directory."
 3. HOD = Head of the Department.
-4. For lists, use numbered points.
-5. Be concise and factual. No extra commentary.
+4. Be exceptionally concise. Do not use conversational filler.
 
-STAFF DATA:
+DATA:
 {context}
 
 Question: {query_text}
 Answer:"""
 
-        n = len(matched_indices) if matched_indices else len(self.records)
+        n = len(self.records)
         print(f"  [StaffRAG] {method}: {n} records, {len(prompt)} chars → LLM")
         try:
             ans = self.ollama.generate(prompt).strip()

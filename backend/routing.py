@@ -34,8 +34,8 @@ import re
 from typing import Optional, Tuple
 
 try:
-    from intent_parser import IntentParser
-    from models import QueryIntent, ParsedQuery
+    from intent_parser import IntentParser  # type: ignore[import-not-found]
+    from models import QueryIntent, ParsedQuery  # type: ignore[import-not-found]
     _INTENT_PARSER_AVAILABLE = True
     _intent_parser = IntentParser()
 except ImportError:
@@ -62,6 +62,7 @@ QT_UNIT_LIST           = "UNIT_LIST"
 QT_ATTENDANCE_PERCENTAGE = "ATTENDANCE_PERCENTAGE"
 QT_ATTENDANCE_STATUS   = "ATTENDANCE_STATUS"
 QT_ATTENDANCE_COUNT    = "ATTENDANCE_COUNT"
+QT_TIMETABLE           = "TIMETABLE"
 QT_SEMANTIC            = "SEMANTIC"
 
 # Query types that go to StructuredAcademicStore
@@ -87,7 +88,7 @@ _INTENT_TO_QT = None  # built lazily after import check
 
 def _get_intent_map():
     global _INTENT_TO_QT
-    if _INTENT_TO_QT is None and _INTENT_PARSER_AVAILABLE:
+    if _INTENT_TO_QT is None and _INTENT_PARSER_AVAILABLE and QueryIntent is not None:
         _INTENT_TO_QT = {
             QueryIntent.COURSE_NAME:       QT_COURSE_NAME,
             QueryIntent.CREDITS:           QT_CREDITS,
@@ -166,8 +167,22 @@ def classify(query: str, session_course: Optional[str] = None) -> Tuple[bool, Op
     """
     q_lo = query.lower()
     
-    # ── 0. High priority interceptors (Staff / Attendance) ───────────────────
-    # Staff info — keyword triggers
+    # ── 0. High priority interceptors ──────────────────────────────────────────
+    
+    # Timetable — BEFORE staff so "staff in charge for X lab" goes to timetable
+    timetable_keywords = [
+        'timetable', 'time table', 'schedule', 'when is', 'period', 'class time', 
+        'what time', 'venue', 'lab time', 'lab room', 'what class', 'lunch break',
+        'which day', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
+        'saturday', 'naan mudhalvan', 'staff in charge', 'staff incharge',
+        'assistant staff', 'lab venue', 'where is',
+        'current period', 'current class', 'right now', 'going on',
+        'happening now', 'this hour', 'current hour', 'present period',
+    ]
+    if any(t in q_lo for t in timetable_keywords):
+        return False, QT_TIMETABLE
+
+    # Staff info — keyword triggers (after timetable check)
     staff_regex = r'\b(who\s+teaches|who\s+is\s+teaching|instructor|professor[s]?|facult(?:y|ies)|staff[s]?|hod|head\s+of\s+department|email|contact\s+(?:number|details|info|no)|phone\s+(?:number|no)|principal|vice\s+principal|bursar|superintendent|administration|institution|specializ\w*|qualification|area\s+of|designation|experience\s+year|teaches?\s+what|department\s+head)\b'
     if re.search(staff_regex, q_lo):
         return True, "STAFF_INFO"
@@ -203,7 +218,7 @@ def classify(query: str, session_course: Optional[str] = None) -> Tuple[bool, Op
         parsed = _intent_parser.parse(query, session_course)
         intent_map = _get_intent_map()
 
-        if parsed.intents:
+        if parsed.intents and intent_map is not None:
             primary = parsed.intents[0]
             qt = intent_map.get(primary, QT_SEMANTIC)
 
@@ -253,7 +268,18 @@ def _legacy_classify(query: str) -> Tuple[bool, Optional[str]]:
     ]):
         return True, QT_ATTENDANCE_COUNT
     
-    # Staff info
+    # ── TIMETABLE (BEFORE staff, so lab staff queries go to timetable) ────────
+    timetable_keywords = [
+        'timetable', 'time table', 'schedule', 'when is', 'period', 'class time', 
+        'what time', 'venue', 'lab time', 'lab room', 'what class', 'lunch break',
+        'which day', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
+        'saturday', 'naan mudhalvan', 'staff in charge', 'staff incharge',
+        'assistant staff', 'lab venue',
+    ]
+    if any(t in q for t in timetable_keywords):
+        return False, QT_TIMETABLE
+
+    # Staff info (after timetable check)
     staff_regex = r'\b(who\s+teaches|who\s+is\s+teaching|instructor|professor[s]?|facult(?:y|ies)|staff[s]?|hod|head\s+of\s+department|email|contact\s+(?:number|details|info|no)|phone\s+(?:number|no)|principal|vice\s+principal|bursar|superintendent|administration|institution)\b'
     if re.search(staff_regex, q):
         return True, "STAFF_INFO"

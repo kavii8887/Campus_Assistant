@@ -85,7 +85,7 @@ class CourseCodeResolver:
         
         print(f"✓ Loaded {count} course mappings")
     
-    def parse_code_structure(self, code: str) -> Dict[str, Optional[str]]:
+    def parse_code_structure(self, code: str) -> Dict[str, Optional[str | int]]:
         """Parse course code structure"""
         code_upper = code.upper()
         

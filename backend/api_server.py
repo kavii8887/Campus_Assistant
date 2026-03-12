@@ -220,7 +220,7 @@ async def upload_attendance(
     date: str = Form(...),
 ):
 
-    if not file.filename.endswith(".xlsx"):
+    if not file.filename or not file.filename.endswith(".xlsx"):
         return {"ok": False, "error": "Only .xlsx files allowed"}
 
     upload_dir = Path("temp_uploads")
@@ -235,7 +235,7 @@ async def upload_attendance(
         normalized = normalize_department(dept)
 
         pipeline = AttendanceIngestionPipeline(
-            department=normalized
+            department=normalized or dept
         )
 
         pipeline.ingest(

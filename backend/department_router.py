@@ -24,6 +24,7 @@ from vector_store_paths import VectorStorePaths
 _resolver_cache: Dict[str, Any] = {}
 _vector_cache: Dict[str, Any] = {}
 _attendance_cache: Dict[str, Any] = {}  # PHASE 4: Attendance vector stores
+_timetable_cache: Dict[str, Any] = {}   # PHASE 5: Timetable pipeline (deterministic)
 _struct_cache: Dict[str, Any] = {}   # StructuredAcademicStore per dept
 
 
@@ -47,6 +48,7 @@ class DepartmentRouter:
         self.course_resolver = None
         self.vector_db = None
         self.attendance_db = None  # PHASE 4: Attendance vector store
+        self.timetable_db = None   # PHASE 5: Timetable vector store
         self.structured_store = None
         
         # PHASE 5: Ensure structured timetable directories exist
@@ -110,7 +112,7 @@ class DepartmentRouter:
             # v5.x: acronym loading moved into course mappings / synonym system
             acronym_path = Path(f"data/{dept}/{dept}_acronyms.json")
             if acronym_path.exists() and hasattr(resolver, "load_acronyms"):
-                resolver.load_acronyms(acronym_path)
+                resolver.load_acronyms(acronym_path)  # type: ignore[attr-defined]
 
             _resolver_cache[dept] = resolver
             print(f"✓ Resolver initialised for {dept}")
@@ -165,12 +167,32 @@ class DepartmentRouter:
         else:
             print(f"✓ Attendance DB loaded from cache for {dept}")
 
+        # ── TimetablePipeline (deterministic, year-aware) PHASE 5 ─────────────
+        if dept not in _timetable_cache:
+            try:
+                from timetable_pipeline import TimetablePipeline
+                timetable_pipeline = TimetablePipeline(
+                    ollama_client=self.ollama,
+                    department=dept,
+                    pdf_dir="data/general/timetables",
+                    cache_dir="data/cache",
+                    year=None,  # Load all years; year selection happens at query time
+                )
+                _timetable_cache[dept] = timetable_pipeline
+            except Exception as e:
+                print(f"⚠ TimetablePipeline failed for {dept}: {e}")
+                import traceback
+                traceback.print_exc()
+                _timetable_cache[dept] = None
+        else:
+            print(f"✓ Timetable Pipeline loaded from cache for {dept}")
+
         # ── StructuredAcademicStore ───────────────────────────────────────────
         if dept not in _struct_cache:
             try:
                 from structured_store import StructuredAcademicStore
                 struct_path = Path(self.persist_path) / dept / "structured"
-                store = StructuredAcademicStore(persist_path=str(struct_path))
+                store = StructuredAcademicStore(db_path=str(struct_path))
                 _struct_cache[dept] = store
                 print(f"✓ StructuredAcademicStore initialised for {dept}")
             except ImportError:
@@ -186,6 +208,7 @@ class DepartmentRouter:
         self.course_resolver = _resolver_cache[dept]
         self.vector_db = _vector_cache[dept]
         self.attendance_db = _attendance_cache[dept]  # PHASE 4
+        self.timetable_db = _timetable_cache[dept]    # PHASE 5
         self.structured_store = _struct_cache[dept]
         self.department = dept
 

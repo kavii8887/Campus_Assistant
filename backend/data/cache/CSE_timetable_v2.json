@@ -1,0 +1,660 @@
+{
+  "years": {
+    "2": {
+      "daily_schedule": {
+        "MON": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "DBMS",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 2,
+            "time": "2 (10.00AM TO 10.50 AM)",
+            "subject": "AIML",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 3,
+            "time": "3 (11.00AM TO 11.50AM)",
+            "subject": "ALG",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 4,
+            "time": "4 (11.50AM TO 12.40PM)",
+            "subject": "OS",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "AIML/ALGLAB",
+            "is_lab": true,
+            "span": 5
+          }
+        ],
+        "TUE": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "AIML",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 2,
+            "time": "2 (10.00AM TO 10.50 AM)",
+            "subject": "TOC",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 3,
+            "time": "3 (11.00AM TO 11.50AM)",
+            "subject": "OS",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 4,
+            "time": "4 (11.50AM TO 12.40PM)",
+            "subject": "DBMS",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "EVS",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 7,
+            "time": "6 (2.30PM TO 3.15PM)",
+            "subject": "OS/DBMSLAB",
+            "is_lab": true,
+            "span": 4
+          }
+        ],
+        "WED": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "ALG",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 2,
+            "time": "2 (10.00AM TO 10.50 AM)",
+            "subject": "EVS",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 3,
+            "time": "3 (11.00AM TO 11.50AM)",
+            "subject": "TOC",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 4,
+            "time": "4 (11.50AM TO 12.40PM)",
+            "subject": "DBMS",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "MORAL",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 7,
+            "time": "6 (2.30PM TO 3.15PM)",
+            "subject": "PLACEMENT/NCC",
+            "is_lab": false,
+            "span": 1
+          }
+        ],
+        "THU": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "NAAN MUDHALVAN COURSES",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "NAAN MUDHALVAN COURSES",
+            "is_lab": false,
+            "span": 1
+          }
+        ],
+        "FRI": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "OS",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 2,
+            "time": "2 (10.00AM TO 10.50 AM)",
+            "subject": "AIML",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 3,
+            "time": "3 (11.00AM TO 11.50AM)",
+            "subject": "LIB",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 4,
+            "time": "4 (11.50AM TO 12.40PM)",
+            "subject": "ALG",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "TOC",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 7,
+            "time": "6 (2.30PM TO 3.15PM)",
+            "subject": "OS/DBMSLAB",
+            "is_lab": true,
+            "span": 4
+          }
+        ]
+      },
+      "practicals": [
+        {
+          "code": "CS3481",
+          "name": "DatabaseManagement SystemsLaboratory",
+          "staff_incharge": "Mrs.MMangaiyarkarasi",
+          "assistant_staff": "Mr.S.Gopalakrishnan(Tue) Mrs.T.Archana(Fri)",
+          "venue": "CCLAB"
+        },
+        {
+          "code": "CS3461",
+          "name": "OperatingSystemsLaboratory",
+          "staff_incharge": "Mrs.R.Narmatha",
+          "assistant_staff": "Ms.M.Devi",
+          "venue": "CSELAB2"
+        },
+        {
+          "code": "CS3491",
+          "name": "ArtificialIntelligenceand MachineLearninglab",
+          "staff_incharge": "K.Prakash",
+          "assistant_staff": "Mrs.MMangaiyarkarasi",
+          "venue": "CSELAB4A"
+        },
+        {
+          "code": "CS3401",
+          "name": "Algorithmslab",
+          "staff_incharge": "Mr.AlokKumar",
+          "assistant_staff": "Mr.J.Sreejayanth",
+          "venue": "CSELAB4B"
+        }
+      ],
+      "subject_map": {
+        "DBMS": {
+          "code": "CS3492",
+          "name": "DatabaseManagement Systems",
+          "staff": "Mrs.M Mangaiyarkarasi"
+        },
+        "OS": {
+          "code": "CS3451",
+          "name": "IntroductiontoOperating Systems",
+          "staff": "Ms.M.Devi"
+        },
+        "AIML": {
+          "code": "CS3491",
+          "name": "ArtificialIntelligenceand MachineLearning",
+          "staff": "Mr.K.Prakash"
+        },
+        "ALG": {
+          "code": "CS3401",
+          "name": "Algorithms",
+          "staff": "Mr.AlokKumar"
+        },
+        "TOC": {
+          "code": "CS3452",
+          "name": "TheoryofComputation",
+          "staff": "Mrs.R.Narmatha"
+        },
+        "EVS": {
+          "code": "GE3451",
+          "name": "EnvironmentalSciencesand Sustainability",
+          "staff": ""
+        },
+        "MORAL": {
+          "name": "Moral and Ethics",
+          "code": "",
+          "staff": ""
+        },
+        "LIB": {
+          "name": "Library",
+          "code": "",
+          "staff": ""
+        }
+      },
+      "period_headers": [
+        "1 (9.10AM TO 10.00AM)",
+        "2 (10.00AM TO 10.50 AM)",
+        "3 (11.00AM TO 11.50AM)",
+        "4 (11.50AM TO 12.40PM)",
+        "LUNCH BREAK",
+        "5 (1.45PM TO 2.30PM)",
+        "6 (2.30PM TO 3.15PM)",
+        "7 (3.15PM TO 4.00PM)",
+        "8 (4.00PM TO 4.45PM)"
+      ]
+    },
+    "3": {
+      "daily_schedule": {
+        "MON": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "DEVOPS",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 2,
+            "time": "2 (10.00AM TO 10.50AM)",
+            "subject": "CLOUD",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 3,
+            "time": "3 (11.00AM TO 11.50AM)",
+            "subject": "OOSE",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 4,
+            "time": "4 (11.50AM TO 12.40PM)",
+            "subject": "IOT",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "OOSE/IOTLAB",
+            "is_lab": true,
+            "span": 8
+          }
+        ],
+        "TUE": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "IOT",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 2,
+            "time": "2 (10.00AM TO 10.50AM)",
+            "subject": "SOFT",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 3,
+            "time": "3 (11.00AM TO 11.50AM)",
+            "subject": "MULTI",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 4,
+            "time": "4 (11.50AM TO 12.40PM)",
+            "subject": "OOSE",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "DEVOPS/CLOUDLAB",
+            "is_lab": true,
+            "span": 8
+          }
+        ],
+        "WED": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "NAAN MUDHALVAN COURSES",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "HST",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 8,
+            "time": "",
+            "subject": "LIB",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 11,
+            "time": "",
+            "subject": "SPORTS",
+            "is_lab": false,
+            "span": 1
+          }
+        ],
+        "THU": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "OOSE",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 2,
+            "time": "2 (10.00AM TO 10.50AM)",
+            "subject": "MULTI",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 3,
+            "time": "3 (11.00AM TO 11.50AM)",
+            "subject": "DEVOPS",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 4,
+            "time": "4 (11.50AM TO 12.40PM)",
+            "subject": "SOFT",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "MULTI/SOFTLAB",
+            "is_lab": true,
+            "span": 8
+          }
+        ],
+        "FRI": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "CLOUD",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 2,
+            "time": "2 (10.00AM TO 10.50AM)",
+            "subject": "IOT",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 3,
+            "time": "3 (11.00AM TO 11.50AM)",
+            "subject": "HST",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 4,
+            "time": "4 (11.50AM TO 12.40PM)",
+            "subject": "MORAL",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "HST",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 9,
+            "time": "",
+            "subject": "PLACEMENT/NCC",
+            "is_lab": false,
+            "span": 1
+          }
+        ]
+      },
+      "practicals": [
+        {
+          "code": "CCS356",
+          "name": "ObjectOrientedSoftware EngineeringLab",
+          "staff_incharge": "Mrs.R.Narmatha",
+          "assistant_staff": "Ms.M.Devi",
+          "venue": "CCLAB"
+        },
+        {
+          "code": "CCS364",
+          "name": "SoftComputingLab",
+          "staff_incharge": "Mr.AlokKumar",
+          "assistant_staff": "Mrs.T.Archana",
+          "venue": "CSELABIVA"
+        },
+        {
+          "code": "CCS336",
+          "name": "CloudServices ManagementLab",
+          "staff_incharge": "Mrs.T.Archana",
+          "assistant_staff": "Mr.AlokKumar",
+          "venue": "CSELABIVB"
+        },
+        {
+          "code": "CCS342",
+          "name": "DevOpsLab",
+          "staff_incharge": "Mr.J.Sreejayanth",
+          "assistant_staff": "Mr.K.Prakash",
+          "venue": "CSELABIVA"
+        },
+        {
+          "code": "CCS353",
+          "name": "MultimediaData CompressionandStorageLab",
+          "staff_incharge": "Mr.K.Prakash",
+          "assistant_staff": "Mr.J.Sreejayanth",
+          "venue": "CSELABIVB"
+        }
+      ],
+      "subject_map": {
+        "OOSE": {
+          "code": "CCS356",
+          "name": "ObjectOrientedSoftware Engineering",
+          "staff": "Mrs.R.Narmatha"
+        },
+        "SOFT": {
+          "code": "CCS364",
+          "name": "SoftComputing",
+          "staff": "Mr.AlokKumar"
+        },
+        "CLOUD": {
+          "code": "CCS336",
+          "name": "CloudServices Management",
+          "staff": "Mrs.T.Archana"
+        },
+        "DEVOPS": {
+          "code": "CCS342",
+          "name": "DevOps",
+          "staff": "Mr.J.Sreejayanth"
+        },
+        "MULTI": {
+          "code": "CCS353",
+          "name": "MultimediaData CompressionandStorage",
+          "staff": "Mr.K.Prakash"
+        },
+        "HST": {
+          "code": "MX3086",
+          "name": "HistoryofScienceand TechnologyinIndia",
+          "staff": "Dr.A.M.Kalpana"
+        },
+        "IOT": {
+          "code": "CS3691",
+          "name": "EmbeddedSystemsandIoT",
+          "staff": "Mr.Thiyagarajan"
+        },
+        "LIB": {
+          "name": "Library",
+          "code": "",
+          "staff": ""
+        },
+        "MORAL": {
+          "name": "Moral and Ethics",
+          "code": "",
+          "staff": ""
+        }
+      },
+      "period_headers": [
+        "1 (9.10AM TO 10.00AM)",
+        "2 (10.00AM TO 10.50AM)",
+        "3 (11.00AM TO 11.50AM)",
+        "4 (11.50AM TO 12.40PM)",
+        "LUNC H BREA K",
+        "5 (1.45PM TO 2.30PM)",
+        "6 (2.30PM TO 3.15PM)",
+        "",
+        "",
+        "7 (3.15PM TO 4.00PM)",
+        "",
+        "8 (4.00PM TO 4.45PM)"
+      ]
+    },
+    "4": {
+      "daily_schedule": {
+        "MON": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "ProjectWork/Internship",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "ProjectWork/Internship",
+            "is_lab": false,
+            "span": 1
+          }
+        ],
+        "TUE": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "ProjectWork/Internship",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "ProjectWork/Internship",
+            "is_lab": false,
+            "span": 1
+          }
+        ],
+        "WED": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "ProjectWork/Internship",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "ProjectWork/Internship",
+            "is_lab": false,
+            "span": 1
+          }
+        ],
+        "THU": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "ProjectWork/Internship",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "ProjectWork/Internship",
+            "is_lab": false,
+            "span": 1
+          }
+        ],
+        "FRI": [
+          {
+            "period": 1,
+            "time": "1 (9.10AM TO 10.00AM)",
+            "subject": "ProjectWork/Internship",
+            "is_lab": false,
+            "span": 1
+          },
+          {
+            "period": 6,
+            "time": "5 (1.45PM TO 2.30PM)",
+            "subject": "ProjectWork/Internship",
+            "is_lab": false,
+            "span": 1
+          }
+        ]
+      },
+      "practicals": [],
+      "subject_map": {},
+      "period_headers": [
+        "1 (9.10AM TO 10.00AM)",
+        "2 (10.00AM TO 10.50AM)",
+        "3 (11.00AM TO 11.50AM)",
+        "4 (11.50AM TO 12.40PM)",
+        "LUNCH BREAK",
+        "5 (1.45PM TO 2.30PM)",
+        "6 (2.30PM TO 3.15PM)",
+        "7 (3.15PM TO 4.00PM)",
+        "8 (4.00PM TO 4.45PM)"
+      ]
+    }
+  }
+}

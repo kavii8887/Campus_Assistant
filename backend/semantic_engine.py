@@ -179,7 +179,7 @@ class SemanticEngine:
     # ── Context building ──────────────────────────────────────────────────────
 
     def _build_context(self, chunks: List[Dict], max_chars: int) -> Tuple[str, int]:
-        sorted_chunks = sorted(chunks, key=lambda c: c['metadata']['chunk_index'])
+        sorted_chunks = sorted(chunks, key=lambda c: c['metadata'].get('chunk_index', 0))
         parts = []
         total = 0
         used = 0
@@ -197,21 +197,21 @@ class SemanticEngine:
     # ── LLM ──────────────────────────────────────────────────────────────────
 
     def _build_prompt(self, query: str, context: str) -> str:
-        return f"""You are a helpful syllabus assistant. Answer based ONLY on the context below.
+        return f"""You are a data extraction assistant. Answer based ONLY on the context below.
 
 RULES:
-1. If the information is NOT in the context, respond: "Not in syllabus."
-2. NEVER use general knowledge or external information.
-3. Only use information that APPEARS in the context.
-4. Be conversational and helpful in your tone.
-5. If context is empty or irrelevant, respond: "Not in syllabus."
+1. If the exact information is NOT in the context, you MUST output exactly: "Not in syllabus."
+2. NEVER use general knowledge or external information. NO guessing.
+3. Your answer must be extremely concise and direct.
+4. Do NOT use conversational filler. Just extract the data.
+5. If context is empty, respond exactly: "Not in syllabus."
 
 CONTEXT:
 {context}
 
 QUERY: {query}
 
-ANSWER (from context only):"""
+ANSWER:"""
 
     def _generate(self, prompt: str) -> str:
         try:
@@ -227,7 +227,7 @@ ANSWER (from context only):"""
                         "num_ctx": 2048,
                     }
                 },
-                timeout=45
+                timeout=180
             )
             if resp.status_code == 200:
                 return resp.json()['response'].strip()
