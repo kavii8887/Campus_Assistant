@@ -599,24 +599,39 @@ class AcademicRAGSystem:
                           QT_UNIT_CONTENT, QT_CREDITS}:
             # Strip common prefix/suffix words to isolate the subject name
             q_stripped = query_text.lower()
-            for prefix in ['what are the ', 'list ', 'show ', 'give me ', 'get ',
-                           'objectives of ', 'objectives for ', 'outcomes of ', 'outcomes for ',
-                           'textbooks for ', 'textbooks of ', 'textbook for ', 'textbook of ',
-                           'references for ', 'references of ', 'reference for ',
-                           'lab exercises for ', 'lab exercises of ',
-                           'units in ', 'units of ', 'units for ',
-                           'unit list for ', 'unit list of ',
-                           'syllabus for ', 'syllabus of ', 'full syllabus for ',
-                           'credits for ', 'credits of ', 'how many credits for ',
-                           'how many credits does ', 'how many credits of ',
-                           'unit 1 of ', 'unit 2 of ', 'unit 3 of ', 'unit 4 of ', 'unit 5 of ',
-                           'unit i of ', 'unit ii of ', 'unit iii of ', 'unit iv of ', 'unit v of ']:
-                if q_stripped.startswith(prefix):
-                    q_stripped = q_stripped[len(prefix):]
-                    break
-            for suffix in [' have', ' has', ' got', '?', '.']:
-                if q_stripped.endswith(suffix):
-                    q_stripped = q_stripped[:-len(suffix)]
+            changed = True
+            while changed:
+                changed = False
+                for prefix in [
+                    'what are the ', 'what is the ', "what's the ", 'what are ', 'what is ', 'which is the ', 'what ',
+                    'list ', 'show ', 'give me ', 'get ',
+                    'objectives of ', 'objectives for ', 'outcomes of ', 'outcomes for ',
+                    'textbooks for ', 'textbooks of ', 'textbook for ', 'textbook of ',
+                    'reference books for ', 'reference book for ', 'reference books of ', 'reference book of ',
+                    'references for ', 'references of ', 'reference for ', 'reference of ',
+                    'lab exercises for ', 'lab exercises of ',
+                    'units in ', 'units of ', 'units for ',
+                    'unit list for ', 'unit list of ',
+                    'syllabus for ', 'syllabus of ', 'full syllabus for ',
+                    'credits for ', 'credits of ', 'how many credits for ',
+                    'how many credits does ', 'how many credits of ',
+                    'unit 1 of ', 'unit 2 of ', 'unit 3 of ', 'unit 4 of ', 'unit 5 of ',
+                    'unit i of ', 'unit ii of ', 'unit iii of ', 'unit iv of ', 'unit v of '
+                ]:
+                    if q_stripped.startswith(prefix):
+                        q_stripped = q_stripped[len(prefix):].strip()
+                        changed = True
+                        break
+
+            changed = True
+            while changed:
+                changed = False
+                for suffix in [' have', ' has', ' got', '?', '.']:
+                    if q_stripped.endswith(suffix):
+                        q_stripped = q_stripped[:-len(suffix)].strip()
+                        changed = True
+                        break
+
             q_stripped = q_stripped.strip()
             if q_stripped and q_stripped != query_text.lower():
                 code, name, _ = resolver.resolve_code(q_stripped, allow_fuzzy=True)  # type: ignore[union-attr]
